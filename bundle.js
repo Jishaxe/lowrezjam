@@ -1,36 +1,145 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/* globals Phaser */
 var $ = require('jquery')
+var Maze = require('./mazes').Maze
 
-$(document).ready(function () {
-  window.app = new App('#game-container')
-  window.app.start()
-})
+window.app = new App('#game-container')
+window.app.start()
 
 // Main app class
 function App (gameContainer) {
+  var self = this
   this.gameContainer = gameContainer
+  this.phaser = null
+  this.maze = null
 
   // Start game
   this.start = function () {
     // Assign resize handler and trigger it once.
     // Keeps the game container in proportion!
-    $(window).resize(this.onResize)
-    this.onResize()
+    $(window).resize(self.onResize)
+    self.onResize()
 
     // Fade in the game
     $('#container').css('opacity', 1)
+
+    self.startPhaser()
+  }
+
+  this.loadMaze = function (maze) {
+    if (self.maze != null) {
+      self.maze.destroy()
+    }
+
+    self.maze = maze
+    self.maze.addToPhaser(self.phaser)
+  }
+
+  this.onCreate = function () {
+    var maze = new Maze()
+    maze.generate(5, 5)
+    self.loadMaze(maze)
+  }
+
+  this.onPreload = function () {
+    self.phaser.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT
   }
 
   // Gamecontainer resize handler
   this.onResize = function (stuff) {
-    // Resize with a ratio of 1:1
-    $(gameContainer).height($(gameContainer).width())
+    // Resize the canvas parent with a ratio of 1:1
+    var width = $(gameContainer).width()
+    $(gameContainer).height(width)
+  }
+
+  // Starts up the phaser instance
+  this.startPhaser = function () {
+    self.phaser = new Phaser.Game(64, 64, Phaser.CANVAS, this.gameContainer.split('#')[1], {preload: this.onPreload, create: this.onCreate})
   }
 }
 
 module.exports = App
 
-},{"jquery":2}],2:[function(require,module,exports){
+},{"./mazes":2,"jquery":3}],2:[function(require,module,exports){
+var mazeGenerator = require('maze.js')
+
+// Represents a maze
+function Maze () {
+  this.rooms = {}
+
+  // Generate a new maze with specified width & height
+  this.generate = function (width, height) {
+    this.from(mazeGenerator(width, height))
+  }
+
+  // Parse a maze.js linkset
+  this.from = function (links) {
+    for (var key in links) {
+      var link = links[key]
+
+      var roomOne = link[0]
+      var roomTwo = link[1]
+
+      if (this.rooms[roomOne.x + ',' + roomOne.y] == null) {
+        this.rooms[roomOne.x + ',' + roomOne.y] = new Room(roomOne.x, roomOne.y)
+      }
+
+      if (this.rooms[roomTwo.x + ',' + roomTwo.y] == null) {
+        this.rooms[roomTwo.x + ',' + roomTwo.y] = new Room(roomTwo.x, roomTwo.y)
+      }
+
+      this.rooms[roomOne.x + ',' + roomOne.y].linkedTo[roomTwo.x + ',' + roomTwo.y] = roomTwo
+      this.rooms[roomTwo.x + ',' + roomTwo.y].linkedTo[roomOne.x + ',' + roomOne.y] = roomOne
+    }
+  }
+
+  // Add this maze to phaser
+  this.addToPhaser = function (phaser) {
+    // For every room
+
+    var opts = {}
+    for (var key in this.rooms) {
+      var room = this.rooms[key]
+
+      // Work out the key for the Phaser sprite.
+      // The key is in this format, for a room open in north and south: roomNS
+      var sprite_key = 'room'
+
+      var openNorth = false
+      var openEast = false
+      var openSouth = false
+      var openWest = false
+
+      for (var lkey in room.linkedTo) {
+        var linkedRoom = room.linkedTo[lkey]
+        if (linkedRoom.x > room.x) openEast = true
+        if (linkedRoom.x < room.x) openWest = true
+        if (linkedRoom.y > room.y) openNorth = true
+        if (linkedRoom.y < room.y) openSouth = true
+      }
+
+      if (openNorth) sprite_key += 'N'
+      if (openEast) sprite_key += 'E'
+      if (openSouth) sprite_key += 'S'
+      if (openWest) sprite_key += 'W'
+
+      opts[sprite_key] = 1
+    }
+    for (var opt in opts) console.log(opt)
+  }
+}
+
+// Represents a room
+function Room (x, y) {
+  // Other Rooms this is linked to
+  this.linkedTo = {}
+  this.x = x
+  this.y = y
+}
+
+module.exports.Maze = Maze
+
+},{"maze.js":4}],3:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.2.2
  * http://jquery.com/
@@ -9873,5 +9982,125 @@ if ( !noGlobal ) {
 
 return jQuery;
 }));
+
+},{}],4:[function(require,module,exports){
+'use strict';
+
+/**
+ * base function for creating a maze
+ *
+ * @param {number} sizeX count of rooms on the x axis
+ * @param {number} sizeY count of rooms on the y axis
+ */
+var maze = function(sizeX, sizeY) {
+  maze._directions = [{x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0}];
+  maze._links = {};
+  maze._path = [];
+  maze._size = {
+    x: sizeX,
+    y: sizeY
+  };
+  maze._visitCount = 0;
+  maze._visited = {};
+
+  // create maze with startpoint
+  maze._create({
+    x: maze._random(1, maze._size.x),
+    y: maze._random(1, maze._size.y)
+  });
+
+  return maze._links;
+};
+
+
+/**
+ * this really creates the maze, room for room
+ *
+ * @param {object} room next room to visit and search, with x- and y-coords
+ */
+maze._create = function(room) {
+  var nextRoom;
+
+  // add room to visited rooms and to the path
+  if (maze._visited[room.x + ',' + room.y] === undefined) {
+    maze._visited[room.x + ',' + room.y] = true;
+    ++maze._visitCount;
+  }
+
+  // get next random room
+  nextRoom = maze._getDirection(room);
+
+  if (nextRoom === false) {
+    if (maze._visitCount < maze._size.x * maze._size.y) {
+      // ok, we are stucked, but don't visited all rooms
+      maze._create(maze._path.pop());
+    }
+  } else {
+    maze._path.push(room); // add room to path
+    maze._links[room.x + ',' + room.y + '_' + nextRoom.x + ',' + nextRoom.y] = [
+      room,
+      nextRoom
+    ];
+    maze._create(nextRoom); // go to next room
+  }
+};
+
+
+/**
+ * choose the next room to go
+ *
+ * @param {object} room current room to search, with x- and y-coords
+ * @return {object|boolean} returns the next room or false, if we are stucked
+ */
+maze._getDirection = function(room) {
+  var directions = [],
+      direction,
+      nextRoom;
+
+  // can we add north?
+  if (room.y !== 1 && !maze._visited[room.x + ',' + (room.y - 1)]) {
+    directions.push(1);
+  }
+
+  // can we add east?
+  if (room.x !== maze._size.x && !maze._visited[(room.x + 1) + ',' + room.y]) {
+    directions.push(2);
+  }
+
+  // can we add south?
+  if (room.y !== maze._size.y && !maze._visited[room.x + ',' + (room.y + 1)]) {
+    directions.push(3);
+  }
+
+  // can we add west?
+  if (room.x !== 1 && !maze._visited[(room.x - 1) + ',' + room.y]) {
+    directions.push(4);
+  }
+
+  if (directions.length === 0) {
+    nextRoom = false;
+  } else {
+    direction = directions[maze._random(0, directions.length - 1)] - 1;
+    nextRoom = {
+      x: room.x + maze._directions[direction].x,
+      y: room.y + maze._directions[direction].y
+    };
+  }
+
+  return nextRoom;
+};
+
+
+/**
+ * generates a random number between two numbers
+ *
+ * @param {number} min minimum number
+ * @param {number} max maximum number
+ */
+maze._random = function(min, max) {
+  return min + parseInt(Math.random() * (max - min + 1), 10);
+};
+
+module.exports = maze;
 
 },{}]},{},[1]);
