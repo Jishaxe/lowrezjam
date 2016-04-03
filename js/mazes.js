@@ -33,8 +33,6 @@ function Maze () {
   // Add this maze to phaser
   this.addToPhaser = function (phaser) {
     // For every room
-
-    var opts = {}
     for (var key in this.rooms) {
       var room = this.rooms[key]
 
@@ -51,8 +49,8 @@ function Maze () {
         var linkedRoom = room.linkedTo[lkey]
         if (linkedRoom.x > room.x) openEast = true
         if (linkedRoom.x < room.x) openWest = true
-        if (linkedRoom.y > room.y) openNorth = true
-        if (linkedRoom.y < room.y) openSouth = true
+        if (linkedRoom.y < room.y) openNorth = true
+        if (linkedRoom.y > room.y) openSouth = true
       }
 
       if (openNorth) sprite_key += 'N'
@@ -60,7 +58,10 @@ function Maze () {
       if (openSouth) sprite_key += 'S'
       if (openWest) sprite_key += 'W'
 
-      opts[sprite_key] = 1
+      if (room.x === 5 && room.y === 5) console.log(sprite_key)
+
+      room.sprite = phaser.add.sprite((room.x * 7) - 3, (room.y * 7) - 3, sprite_key)
+      room.sprite.smoothed = false
     }
     for (var opt in opts) console.log(opt)
   }
@@ -70,6 +71,7 @@ function Maze () {
 function Room (x, y) {
   // Other Rooms this is linked to
   this.linkedTo = {}
+  this.sprite = null
   this.x = x
   this.y = y
 }
