@@ -28,7 +28,12 @@ function App (gameContainer) {
   // Phaser create callback
   // Once phaser is ready to go, gen and load a new maze
   this.onCreate = function () {
+    // Grab the arrow keys
     self.cursors = self.phaser.input.keyboard.createCursorKeys()
+    self.cursors.space = self.phaser.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+
+    // Grab the spacebar
+    self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
 
     var maze = new Maze()
     maze.from()

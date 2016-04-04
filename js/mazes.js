@@ -24,7 +24,7 @@ function Maze () {
   }
 
   this.enableEditor = function () {
-    this.selector = new Selector()
+    this.selector = new Selector(this)
   }
 
   // Add this maze to phaser
@@ -46,8 +46,10 @@ function Maze () {
   }
 }
 
-function Selector () {
+function Selector (maze) {
+  this.maze = maze
   this.sprite = null
+  this.debounce = false
 
   // The current tween for this sprite
   this.tween = {isRunning: false}
@@ -57,14 +59,16 @@ function Selector () {
     this.sprite.blendMode = PIXI.blendModes.ADD
   }
 
-  this.getCurrentCell = function (maze) {
-    return maze.cells[this.sprite.x / maze.cellWidth + ',' + this.sprite.y / maze.cellHeight]
+  this.getCurrentCell = function () {
+    return this.maze.cells[this.sprite.x / this.maze.cellWidth + ',' + this.sprite.y / this.maze.cellHeight]
   }
 
   this.onKey = function (phaser, keys) {
+    // If the selector box isn't moving
     if (!this.tween.isRunning) {
       phaser.tweens.remove(this.tween)
 
+      // First, move the selector box
       var newX
       var newY
 
@@ -76,6 +80,39 @@ function Selector () {
       if (newX || newY) {
         this.tween = phaser.add.tween(this.sprite)
         this.tween.to({x: newX, y: newY}, 100, Phaser.Easing.Linear.Out, true)
+      }
+
+      // Now handle the spacebar
+      if (keys.space.isDown && !this.debounce) {
+        var cell = this.getCurrentCell()
+        console.log(cell)
+
+        // If there is a cell here
+        if (cell instanceof Cell) {
+          // Swap up this shit
+          cell.removeFromPhaser(phaser)
+
+          // Switch a Wall with a Floor and vice versa
+          if (cell instanceof Wall) {
+            var floor = new Floor(cell.x, cell.y)
+            this.maze.cells[cell.x + ',' + cell.y] = floor
+            floor.addToPhaser(phaser)
+          } else if (cell instanceof Floor) {
+            var wall = new Wall(cell.x, cell.y)
+            this.maze.cells[cell.x + ',' + cell.y] = wall
+            wall.addToPhaser(phaser)
+          }
+
+          // Bring the selector to the top
+          this.sprite.bringToTop()
+
+          // Don't space again for 200ms
+          this.debounce = true
+          var self = this
+          setTimeout(function () {
+            self.debounce = false
+          }, 500)
+        }
       }
     }
   }
@@ -91,6 +128,10 @@ function Cell (x, y) {
 
   this.addToPhaser = function (phaser) {
     this.sprite = phaser.add.sprite((this.x * this.width), (this.y * this.height), this.getSpriteKey())
+  }
+
+  this.removeFromPhaser = function (phaser) {
+    this.sprite.destroy()
   }
 }
 
