@@ -867,6 +867,10 @@ function Selector () {
     this.sprite.blendMode = PIXI.blendModes.ADD
   }
 
+  this.getCurrentCell = function (maze) {
+    return maze.cells[this.sprite.x / maze.cellWidth + ',' + this.sprite.y / maze.cellHeight]
+  }
+
   this.onKey = function (phaser, keys) {
     if (!this.tween.isRunning) {
       phaser.tweens.remove(this.tween)
@@ -879,18 +883,9 @@ function Selector () {
       if (keys.right.isDown) newX = this.sprite.x + 10
       if (keys.left.isDown) newX = this.sprite.x - 10
 
-      // If we want to move left right XOR up down. Not dianoganlly!
-      if ((!newX && newY) || (newX && !newY)) {
-        var bounds = phaser.stage.getBounds()
-
-        // If we're not trying to move out the map
-        if ((newX >= 0 &&
-          newX <= bounds.width) ||
-          (newY >= 0 &&
-          newY <= bounds.height)) {
-          this.tween = phaser.add.tween(this.sprite)
-          this.tween.to({x: newX, y: newY}, 100, Phaser.Easing.Linear.Out, true)
-        }
+      if (newX || newY) {
+        this.tween = phaser.add.tween(this.sprite)
+        this.tween.to({x: newX, y: newY}, 100, Phaser.Easing.Linear.Out, true)
       }
     }
   }
