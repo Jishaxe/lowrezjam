@@ -1,79 +1,136 @@
-var mazeGenerator = require('maze.js')
+/* globals PIXI, Phaser */
+
+var inherits = require('util').inherits
 
 // Represents a maze
 function Maze () {
-  this.rooms = {}
-
-  // Generate a new maze with specified width & height
-  this.generate = function (width, height) {
-    this.from(mazeGenerator(width, height))
-  }
+  this.cells = {}
+  this.width = null
+  this.height = null
+  this.cellWidth = 10
+  this.cellHeight = 10
+  this.selector = null
 
   // Parse a maze.js linkset
-  this.from = function (links) {
-    for (var key in links) {
-      var link = links[key]
-
-      var roomOne = link[0]
-      var roomTwo = link[1]
-
-      if (this.rooms[roomOne.x + ',' + roomOne.y] == null) {
-        this.rooms[roomOne.x + ',' + roomOne.y] = new Room(roomOne.x, roomOne.y)
+  this.from = function (json) {
+    for (var x = 1; x <= 30; x++) {
+      for (var y = 1; y <= 30; y++) {
+        this.cells[x + ',' + y] = new Wall(x, y)
       }
-
-      if (this.rooms[roomTwo.x + ',' + roomTwo.y] == null) {
-        this.rooms[roomTwo.x + ',' + roomTwo.y] = new Room(roomTwo.x, roomTwo.y)
-      }
-
-      this.rooms[roomOne.x + ',' + roomOne.y].linkedTo[roomTwo.x + ',' + roomTwo.y] = roomTwo
-      this.rooms[roomTwo.x + ',' + roomTwo.y].linkedTo[roomOne.x + ',' + roomOne.y] = roomOne
     }
+
+    this.width = 30 * this.cellWidth
+    this.height = 30 * this.cellHeight
+  }
+
+  this.enableEditor = function () {
+    this.selector = new Selector()
   }
 
   // Add this maze to phaser
   this.addToPhaser = function (phaser) {
-    // For every room
-    for (var key in this.rooms) {
-      var room = this.rooms[key]
-
-      // Work out the key for the Phaser sprite.
-      // The key is in this format, for a room open in north and south: roomNS
-      var sprite_key = 'room'
-
-      var openNorth = false
-      var openEast = false
-      var openSouth = false
-      var openWest = false
-
-      for (var lkey in room.linkedTo) {
-        var linkedRoom = room.linkedTo[lkey]
-        if (linkedRoom.x > room.x) openEast = true
-        if (linkedRoom.x < room.x) openWest = true
-        if (linkedRoom.y < room.y) openNorth = true
-        if (linkedRoom.y > room.y) openSouth = true
-      }
-
-      if (openNorth) sprite_key += 'N'
-      if (openEast) sprite_key += 'E'
-      if (openSouth) sprite_key += 'S'
-      if (openWest) sprite_key += 'W'
-
-      if (room.x === 5 && room.y === 5) console.log(sprite_key)
-
-      room.sprite = phaser.add.sprite((room.x * 7) - 3, (room.y * 7) - 3, sprite_key)
-      room.sprite.smoothed = false
+    for (var key in this.cells) {
+      var cell = this.cells[key]
+      cell.addToPhaser(phaser)
     }
-    for (var opt in opts) console.log(opt)
+
+    if (this.selector) {
+      this.selector.addToPhaser(phaser)
+      phaser.camera.follow(this.selector.sprite, Phaser.Camera.FOLLOW_TOPDOWN)
+    }
+  }
+
+  this.onKey = function (phaser, keys) {
+    // We only need the keys for editor mode
+    if (this.selector) this.selector.onKey(phaser, keys)
   }
 }
 
-// Represents a room
-function Room (x, y) {
-  // Other Rooms this is linked to
-  this.linkedTo = {}
+function Selector () {
   this.sprite = null
+
+  // The current tween for this sprite
+  this.tween = {isRunning: false}
+
+  this.addToPhaser = function (phaser) {
+    this.sprite = phaser.add.sprite(10, 10, 'selector')
+    this.sprite.blendMode = PIXI.blendModes.ADD
+  }
+
+  this.onKey = function (phaser, keys) {
+    if (!this.tween.isRunning) {
+      phaser.tweens.remove(this.tween)
+
+      var newX
+      var newY
+
+      if (keys.up.isDown) newY = this.sprite.y - 10
+      if (keys.down.isDown) newY = this.sprite.y + 10
+      if (keys.right.isDown) newX = this.sprite.x + 10
+      if (keys.left.isDown) newX = this.sprite.x - 10
+
+      // If we want to move left right XOR up down. Not dianoganlly!
+      if ((!newX && newY) || (newX && !newY)) {
+        var bounds = phaser.stage.getBounds()
+
+        // If we're not trying to move out the map
+        if ((newX >= 0 &&
+          newX <= bounds.width) ||
+          (newY >= 0 &&
+          newY <= bounds.height)) {
+          this.tween = phaser.add.tween(this.sprite)
+          this.tween.to({x: newX, y: newY}, 100, Phaser.Easing.Linear.Out, true)
+        }
+      }
+    }
+  }
+}
+
+// Represents a single block. Can be a floor or a wall
+function Cell (x, y) {
   this.x = x
   this.y = y
+  this.width = 10
+  this.height = 10
+  this.sprite = null
+
+  this.addToPhaser = function (phaser) {
+    this.sprite = phaser.add.sprite((this.x * this.width), (this.y * this.height), this.getSpriteKey())
+  }
 }
+
+// A walkable floor cell
+function Floor (x, y) {
+  Cell.call(this, x, y)
+
+  this.getSpriteKey = function () {
+    return 'floor'
+  }
+}
+
+// A wall.
+function Wall (x, y) {
+  Cell.call(this, x, y)
+
+  this.openNorth = false
+  this.openEast = false
+  this.openSouth = false
+  this.openWest = false
+
+  this.getSpriteKey = function () {
+    var sprite_key = 'wall'
+
+    if (this.openNorth) sprite_key += 'N'
+    if (this.openEast) sprite_key += 'E'
+    if (this.openSouth) sprite_key += 'S'
+    if (this.openWest) sprite_key += 'W'
+
+    // return sprite_key
+    return 'wall'
+  }
+}
+
+inherits(Wall, Cell)
+inherits(Floor, Cell)
 
 module.exports.Maze = Maze

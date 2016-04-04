@@ -1,4 +1,719 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+},{}],2:[function(require,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = setTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    clearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        setTimeout(drainQueue, 0);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],3:[function(require,module,exports){
+module.exports = function isBuffer(arg) {
+  return arg && typeof arg === 'object'
+    && typeof arg.copy === 'function'
+    && typeof arg.fill === 'function'
+    && typeof arg.readUInt8 === 'function';
+}
+},{}],4:[function(require,module,exports){
+(function (process,global){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+var formatRegExp = /%[sdj%]/g;
+exports.format = function(f) {
+  if (!isString(f)) {
+    var objects = [];
+    for (var i = 0; i < arguments.length; i++) {
+      objects.push(inspect(arguments[i]));
+    }
+    return objects.join(' ');
+  }
+
+  var i = 1;
+  var args = arguments;
+  var len = args.length;
+  var str = String(f).replace(formatRegExp, function(x) {
+    if (x === '%%') return '%';
+    if (i >= len) return x;
+    switch (x) {
+      case '%s': return String(args[i++]);
+      case '%d': return Number(args[i++]);
+      case '%j':
+        try {
+          return JSON.stringify(args[i++]);
+        } catch (_) {
+          return '[Circular]';
+        }
+      default:
+        return x;
+    }
+  });
+  for (var x = args[i]; i < len; x = args[++i]) {
+    if (isNull(x) || !isObject(x)) {
+      str += ' ' + x;
+    } else {
+      str += ' ' + inspect(x);
+    }
+  }
+  return str;
+};
+
+
+// Mark that a method should not be used.
+// Returns a modified function which warns once by default.
+// If --no-deprecation is set, then it is a no-op.
+exports.deprecate = function(fn, msg) {
+  // Allow for deprecating things in the process of starting up.
+  if (isUndefined(global.process)) {
+    return function() {
+      return exports.deprecate(fn, msg).apply(this, arguments);
+    };
+  }
+
+  if (process.noDeprecation === true) {
+    return fn;
+  }
+
+  var warned = false;
+  function deprecated() {
+    if (!warned) {
+      if (process.throwDeprecation) {
+        throw new Error(msg);
+      } else if (process.traceDeprecation) {
+        console.trace(msg);
+      } else {
+        console.error(msg);
+      }
+      warned = true;
+    }
+    return fn.apply(this, arguments);
+  }
+
+  return deprecated;
+};
+
+
+var debugs = {};
+var debugEnviron;
+exports.debuglog = function(set) {
+  if (isUndefined(debugEnviron))
+    debugEnviron = process.env.NODE_DEBUG || '';
+  set = set.toUpperCase();
+  if (!debugs[set]) {
+    if (new RegExp('\\b' + set + '\\b', 'i').test(debugEnviron)) {
+      var pid = process.pid;
+      debugs[set] = function() {
+        var msg = exports.format.apply(exports, arguments);
+        console.error('%s %d: %s', set, pid, msg);
+      };
+    } else {
+      debugs[set] = function() {};
+    }
+  }
+  return debugs[set];
+};
+
+
+/**
+ * Echos the value of a value. Trys to print the value out
+ * in the best way possible given the different types.
+ *
+ * @param {Object} obj The object to print out.
+ * @param {Object} opts Optional options object that alters the output.
+ */
+/* legacy: obj, showHidden, depth, colors*/
+function inspect(obj, opts) {
+  // default options
+  var ctx = {
+    seen: [],
+    stylize: stylizeNoColor
+  };
+  // legacy...
+  if (arguments.length >= 3) ctx.depth = arguments[2];
+  if (arguments.length >= 4) ctx.colors = arguments[3];
+  if (isBoolean(opts)) {
+    // legacy...
+    ctx.showHidden = opts;
+  } else if (opts) {
+    // got an "options" object
+    exports._extend(ctx, opts);
+  }
+  // set default options
+  if (isUndefined(ctx.showHidden)) ctx.showHidden = false;
+  if (isUndefined(ctx.depth)) ctx.depth = 2;
+  if (isUndefined(ctx.colors)) ctx.colors = false;
+  if (isUndefined(ctx.customInspect)) ctx.customInspect = true;
+  if (ctx.colors) ctx.stylize = stylizeWithColor;
+  return formatValue(ctx, obj, ctx.depth);
+}
+exports.inspect = inspect;
+
+
+// http://en.wikipedia.org/wiki/ANSI_escape_code#graphics
+inspect.colors = {
+  'bold' : [1, 22],
+  'italic' : [3, 23],
+  'underline' : [4, 24],
+  'inverse' : [7, 27],
+  'white' : [37, 39],
+  'grey' : [90, 39],
+  'black' : [30, 39],
+  'blue' : [34, 39],
+  'cyan' : [36, 39],
+  'green' : [32, 39],
+  'magenta' : [35, 39],
+  'red' : [31, 39],
+  'yellow' : [33, 39]
+};
+
+// Don't use 'blue' not visible on cmd.exe
+inspect.styles = {
+  'special': 'cyan',
+  'number': 'yellow',
+  'boolean': 'yellow',
+  'undefined': 'grey',
+  'null': 'bold',
+  'string': 'green',
+  'date': 'magenta',
+  // "name": intentionally not styling
+  'regexp': 'red'
+};
+
+
+function stylizeWithColor(str, styleType) {
+  var style = inspect.styles[styleType];
+
+  if (style) {
+    return '\u001b[' + inspect.colors[style][0] + 'm' + str +
+           '\u001b[' + inspect.colors[style][1] + 'm';
+  } else {
+    return str;
+  }
+}
+
+
+function stylizeNoColor(str, styleType) {
+  return str;
+}
+
+
+function arrayToHash(array) {
+  var hash = {};
+
+  array.forEach(function(val, idx) {
+    hash[val] = true;
+  });
+
+  return hash;
+}
+
+
+function formatValue(ctx, value, recurseTimes) {
+  // Provide a hook for user-specified inspect functions.
+  // Check that value is an object with an inspect function on it
+  if (ctx.customInspect &&
+      value &&
+      isFunction(value.inspect) &&
+      // Filter out the util module, it's inspect function is special
+      value.inspect !== exports.inspect &&
+      // Also filter out any prototype objects using the circular check.
+      !(value.constructor && value.constructor.prototype === value)) {
+    var ret = value.inspect(recurseTimes, ctx);
+    if (!isString(ret)) {
+      ret = formatValue(ctx, ret, recurseTimes);
+    }
+    return ret;
+  }
+
+  // Primitive types cannot have properties
+  var primitive = formatPrimitive(ctx, value);
+  if (primitive) {
+    return primitive;
+  }
+
+  // Look up the keys of the object.
+  var keys = Object.keys(value);
+  var visibleKeys = arrayToHash(keys);
+
+  if (ctx.showHidden) {
+    keys = Object.getOwnPropertyNames(value);
+  }
+
+  // IE doesn't make error fields non-enumerable
+  // http://msdn.microsoft.com/en-us/library/ie/dww52sbt(v=vs.94).aspx
+  if (isError(value)
+      && (keys.indexOf('message') >= 0 || keys.indexOf('description') >= 0)) {
+    return formatError(value);
+  }
+
+  // Some type of object without properties can be shortcutted.
+  if (keys.length === 0) {
+    if (isFunction(value)) {
+      var name = value.name ? ': ' + value.name : '';
+      return ctx.stylize('[Function' + name + ']', 'special');
+    }
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    }
+    if (isDate(value)) {
+      return ctx.stylize(Date.prototype.toString.call(value), 'date');
+    }
+    if (isError(value)) {
+      return formatError(value);
+    }
+  }
+
+  var base = '', array = false, braces = ['{', '}'];
+
+  // Make Array say that they are Array
+  if (isArray(value)) {
+    array = true;
+    braces = ['[', ']'];
+  }
+
+  // Make functions say that they are functions
+  if (isFunction(value)) {
+    var n = value.name ? ': ' + value.name : '';
+    base = ' [Function' + n + ']';
+  }
+
+  // Make RegExps say that they are RegExps
+  if (isRegExp(value)) {
+    base = ' ' + RegExp.prototype.toString.call(value);
+  }
+
+  // Make dates with properties first say the date
+  if (isDate(value)) {
+    base = ' ' + Date.prototype.toUTCString.call(value);
+  }
+
+  // Make error with message first say the error
+  if (isError(value)) {
+    base = ' ' + formatError(value);
+  }
+
+  if (keys.length === 0 && (!array || value.length == 0)) {
+    return braces[0] + base + braces[1];
+  }
+
+  if (recurseTimes < 0) {
+    if (isRegExp(value)) {
+      return ctx.stylize(RegExp.prototype.toString.call(value), 'regexp');
+    } else {
+      return ctx.stylize('[Object]', 'special');
+    }
+  }
+
+  ctx.seen.push(value);
+
+  var output;
+  if (array) {
+    output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
+  } else {
+    output = keys.map(function(key) {
+      return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
+    });
+  }
+
+  ctx.seen.pop();
+
+  return reduceToSingleString(output, base, braces);
+}
+
+
+function formatPrimitive(ctx, value) {
+  if (isUndefined(value))
+    return ctx.stylize('undefined', 'undefined');
+  if (isString(value)) {
+    var simple = '\'' + JSON.stringify(value).replace(/^"|"$/g, '')
+                                             .replace(/'/g, "\\'")
+                                             .replace(/\\"/g, '"') + '\'';
+    return ctx.stylize(simple, 'string');
+  }
+  if (isNumber(value))
+    return ctx.stylize('' + value, 'number');
+  if (isBoolean(value))
+    return ctx.stylize('' + value, 'boolean');
+  // For some reason typeof null is "object", so special case here.
+  if (isNull(value))
+    return ctx.stylize('null', 'null');
+}
+
+
+function formatError(value) {
+  return '[' + Error.prototype.toString.call(value) + ']';
+}
+
+
+function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
+  var output = [];
+  for (var i = 0, l = value.length; i < l; ++i) {
+    if (hasOwnProperty(value, String(i))) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          String(i), true));
+    } else {
+      output.push('');
+    }
+  }
+  keys.forEach(function(key) {
+    if (!key.match(/^\d+$/)) {
+      output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
+          key, true));
+    }
+  });
+  return output;
+}
+
+
+function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
+  var name, str, desc;
+  desc = Object.getOwnPropertyDescriptor(value, key) || { value: value[key] };
+  if (desc.get) {
+    if (desc.set) {
+      str = ctx.stylize('[Getter/Setter]', 'special');
+    } else {
+      str = ctx.stylize('[Getter]', 'special');
+    }
+  } else {
+    if (desc.set) {
+      str = ctx.stylize('[Setter]', 'special');
+    }
+  }
+  if (!hasOwnProperty(visibleKeys, key)) {
+    name = '[' + key + ']';
+  }
+  if (!str) {
+    if (ctx.seen.indexOf(desc.value) < 0) {
+      if (isNull(recurseTimes)) {
+        str = formatValue(ctx, desc.value, null);
+      } else {
+        str = formatValue(ctx, desc.value, recurseTimes - 1);
+      }
+      if (str.indexOf('\n') > -1) {
+        if (array) {
+          str = str.split('\n').map(function(line) {
+            return '  ' + line;
+          }).join('\n').substr(2);
+        } else {
+          str = '\n' + str.split('\n').map(function(line) {
+            return '   ' + line;
+          }).join('\n');
+        }
+      }
+    } else {
+      str = ctx.stylize('[Circular]', 'special');
+    }
+  }
+  if (isUndefined(name)) {
+    if (array && key.match(/^\d+$/)) {
+      return str;
+    }
+    name = JSON.stringify('' + key);
+    if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
+      name = name.substr(1, name.length - 2);
+      name = ctx.stylize(name, 'name');
+    } else {
+      name = name.replace(/'/g, "\\'")
+                 .replace(/\\"/g, '"')
+                 .replace(/(^"|"$)/g, "'");
+      name = ctx.stylize(name, 'string');
+    }
+  }
+
+  return name + ': ' + str;
+}
+
+
+function reduceToSingleString(output, base, braces) {
+  var numLinesEst = 0;
+  var length = output.reduce(function(prev, cur) {
+    numLinesEst++;
+    if (cur.indexOf('\n') >= 0) numLinesEst++;
+    return prev + cur.replace(/\u001b\[\d\d?m/g, '').length + 1;
+  }, 0);
+
+  if (length > 60) {
+    return braces[0] +
+           (base === '' ? '' : base + '\n ') +
+           ' ' +
+           output.join(',\n  ') +
+           ' ' +
+           braces[1];
+  }
+
+  return braces[0] + base + ' ' + output.join(', ') + ' ' + braces[1];
+}
+
+
+// NOTE: These type checking functions intentionally don't use `instanceof`
+// because it is fragile and can be easily faked with `Object.create()`.
+function isArray(ar) {
+  return Array.isArray(ar);
+}
+exports.isArray = isArray;
+
+function isBoolean(arg) {
+  return typeof arg === 'boolean';
+}
+exports.isBoolean = isBoolean;
+
+function isNull(arg) {
+  return arg === null;
+}
+exports.isNull = isNull;
+
+function isNullOrUndefined(arg) {
+  return arg == null;
+}
+exports.isNullOrUndefined = isNullOrUndefined;
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+exports.isNumber = isNumber;
+
+function isString(arg) {
+  return typeof arg === 'string';
+}
+exports.isString = isString;
+
+function isSymbol(arg) {
+  return typeof arg === 'symbol';
+}
+exports.isSymbol = isSymbol;
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+exports.isUndefined = isUndefined;
+
+function isRegExp(re) {
+  return isObject(re) && objectToString(re) === '[object RegExp]';
+}
+exports.isRegExp = isRegExp;
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+exports.isObject = isObject;
+
+function isDate(d) {
+  return isObject(d) && objectToString(d) === '[object Date]';
+}
+exports.isDate = isDate;
+
+function isError(e) {
+  return isObject(e) &&
+      (objectToString(e) === '[object Error]' || e instanceof Error);
+}
+exports.isError = isError;
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+exports.isFunction = isFunction;
+
+function isPrimitive(arg) {
+  return arg === null ||
+         typeof arg === 'boolean' ||
+         typeof arg === 'number' ||
+         typeof arg === 'string' ||
+         typeof arg === 'symbol' ||  // ES6 symbol
+         typeof arg === 'undefined';
+}
+exports.isPrimitive = isPrimitive;
+
+exports.isBuffer = require('./support/isBuffer');
+
+function objectToString(o) {
+  return Object.prototype.toString.call(o);
+}
+
+
+function pad(n) {
+  return n < 10 ? '0' + n.toString(10) : n.toString(10);
+}
+
+
+var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+              'Oct', 'Nov', 'Dec'];
+
+// 26 Feb 16:19:34
+function timestamp() {
+  var d = new Date();
+  var time = [pad(d.getHours()),
+              pad(d.getMinutes()),
+              pad(d.getSeconds())].join(':');
+  return [d.getDate(), months[d.getMonth()], time].join(' ');
+}
+
+
+// log is just a thin wrapper to console.log that prepends a timestamp
+exports.log = function() {
+  console.log('%s - %s', timestamp(), exports.format.apply(exports, arguments));
+};
+
+
+/**
+ * Inherit the prototype methods from one constructor into another.
+ *
+ * The Function.prototype.inherits from lang.js rewritten as a standalone
+ * function (not on Function.prototype). NOTE: If this file is to be loaded
+ * during bootstrapping this function needs to be rewritten using some native
+ * functions as prototype setup using normal JavaScript does not work as
+ * expected during bootstrapping (see mirror.js in r114903).
+ *
+ * @param {function} ctor Constructor function which needs to inherit the
+ *     prototype.
+ * @param {function} superCtor Constructor function to inherit prototype from.
+ */
+exports.inherits = require('inherits');
+
+exports._extend = function(origin, add) {
+  // Don't do anything if add isn't an object
+  if (!add || !isObject(add)) return origin;
+
+  var keys = Object.keys(add);
+  var i = keys.length;
+  while (i--) {
+    origin[keys[i]] = add[keys[i]];
+  }
+  return origin;
+};
+
+function hasOwnProperty(obj, prop) {
+  return Object.prototype.hasOwnProperty.call(obj, prop);
+}
+
+}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./support/isBuffer":3,"_process":2,"inherits":1}],5:[function(require,module,exports){
 /* globals Phaser */
 var $ = require('jquery')
 var Maze = require('./mazes').Maze
@@ -10,6 +725,7 @@ window.app.start()
 function App (gameContainer) {
   var self = this
   this.gameContainer = gameContainer
+  this.cursors = null
   this.phaser = null
   this.maze = null
 
@@ -25,21 +741,22 @@ function App (gameContainer) {
     $('#container').css('opacity', 1)
   }
 
-  this.loadMaze = function (maze) {
-    if (self.maze != null) {
-      self.maze.destroy()
-    }
+  // Phaser create callback
+  // Once phaser is ready to go, gen and load a new maze
+  this.onCreate = function () {
+    self.cursors = self.phaser.input.keyboard.createCursorKeys()
+
+    var maze = new Maze()
+    maze.from()
+    maze.enableEditor()
 
     self.maze = maze
+    self.phaser.world.setBounds(0, 0, maze.width, maze.height)
     self.maze.addToPhaser(self.phaser)
   }
 
-  this.onCreate = function () {
-    var maze = new Maze()
-    maze.generate(7, 7)
-    self.loadMaze(maze)
-  }
-
+  // Phaser preload callback
+  // Set up scaling and cache all the sprites
   this.onPreload = function () {
     self.phaser.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT
 
@@ -47,21 +764,9 @@ function App (gameContainer) {
       self.phaser.load.image(key, '/img/' + key + '.png')
     }
 
-    img('room')
-    img('roomN')
-    img('roomE')
-    img('roomS')
-    img('roomW')
-    img('roomNS')
-    img('roomEW')
-    img('roomNW')
-    img('roomNSW')
-    img('roomES')
-    img('roomESW')
-    img('roomNEW')
-    img('roomSW')
-    img('roomNE')
-    img('roomNES')
+    img('wall')
+    img('floor')
+    img('selector')
   }
 
   // Gamecontainer resize handler
@@ -81,6 +786,10 @@ function App (gameContainer) {
     self.canvas.getContext('2d').drawImage(self.phaser.canvas, 0, 0, 64, 64, 0, 0, self.canvas.width, self.canvas.height)
   }
 
+  this.onUpdate = function () {
+    if (self.maze) self.maze.onKey(self.phaser, self.cursors)
+  }
+
   this.onInit = function () {
     self.phaser.canvas.style['display'] = 'none'
     self.canvas = Phaser.Canvas.create(300, 300)
@@ -92,94 +801,151 @@ function App (gameContainer) {
 
   // Starts up the phaser instance
   this.startPhaser = function () {
-    self.phaser = new Phaser.Game(64, 64, Phaser.CANVAS, /* this.gameContainer.split('#')[1] */'', {init: this.onInit, preload: this.onPreload, create: this.onCreate, render: this.onRender}, false, false)
+    self.phaser = new Phaser.Game(64, 64, Phaser.CANVAS, /* this.gameContainer.split('#')[1] */'', {init: this.onInit, preload: this.onPreload, create: this.onCreate, render: this.onRender, update: this.onUpdate}, false, false)
   }
 }
 
 module.exports = App
 
-},{"./mazes":2,"jquery":3}],2:[function(require,module,exports){
-var mazeGenerator = require('maze.js')
+},{"./mazes":6,"jquery":7}],6:[function(require,module,exports){
+/* globals PIXI, Phaser */
+
+var inherits = require('util').inherits
 
 // Represents a maze
 function Maze () {
-  this.rooms = {}
-
-  // Generate a new maze with specified width & height
-  this.generate = function (width, height) {
-    this.from(mazeGenerator(width, height))
-  }
+  this.cells = {}
+  this.width = null
+  this.height = null
+  this.cellWidth = 10
+  this.cellHeight = 10
+  this.selector = null
 
   // Parse a maze.js linkset
-  this.from = function (links) {
-    for (var key in links) {
-      var link = links[key]
-
-      var roomOne = link[0]
-      var roomTwo = link[1]
-
-      if (this.rooms[roomOne.x + ',' + roomOne.y] == null) {
-        this.rooms[roomOne.x + ',' + roomOne.y] = new Room(roomOne.x, roomOne.y)
+  this.from = function (json) {
+    for (var x = 1; x <= 30; x++) {
+      for (var y = 1; y <= 30; y++) {
+        this.cells[x + ',' + y] = new Wall(x, y)
       }
-
-      if (this.rooms[roomTwo.x + ',' + roomTwo.y] == null) {
-        this.rooms[roomTwo.x + ',' + roomTwo.y] = new Room(roomTwo.x, roomTwo.y)
-      }
-
-      this.rooms[roomOne.x + ',' + roomOne.y].linkedTo[roomTwo.x + ',' + roomTwo.y] = roomTwo
-      this.rooms[roomTwo.x + ',' + roomTwo.y].linkedTo[roomOne.x + ',' + roomOne.y] = roomOne
     }
+
+    this.width = 30 * this.cellWidth
+    this.height = 30 * this.cellHeight
+  }
+
+  this.enableEditor = function () {
+    this.selector = new Selector()
   }
 
   // Add this maze to phaser
   this.addToPhaser = function (phaser) {
-    // For every room
-    for (var key in this.rooms) {
-      var room = this.rooms[key]
-
-      // Work out the key for the Phaser sprite.
-      // The key is in this format, for a room open in north and south: roomNS
-      var sprite_key = 'room'
-
-      var openNorth = false
-      var openEast = false
-      var openSouth = false
-      var openWest = false
-
-      for (var lkey in room.linkedTo) {
-        var linkedRoom = room.linkedTo[lkey]
-        if (linkedRoom.x > room.x) openEast = true
-        if (linkedRoom.x < room.x) openWest = true
-        if (linkedRoom.y < room.y) openNorth = true
-        if (linkedRoom.y > room.y) openSouth = true
-      }
-
-      if (openNorth) sprite_key += 'N'
-      if (openEast) sprite_key += 'E'
-      if (openSouth) sprite_key += 'S'
-      if (openWest) sprite_key += 'W'
-
-      if (room.x === 5 && room.y === 5) console.log(sprite_key)
-
-      room.sprite = phaser.add.sprite((room.x * 7) - 3, (room.y * 7) - 3, sprite_key)
-      room.sprite.smoothed = false
+    for (var key in this.cells) {
+      var cell = this.cells[key]
+      cell.addToPhaser(phaser)
     }
-    for (var opt in opts) console.log(opt)
+
+    if (this.selector) {
+      this.selector.addToPhaser(phaser)
+      phaser.camera.follow(this.selector.sprite, Phaser.Camera.FOLLOW_TOPDOWN)
+    }
+  }
+
+  this.onKey = function (phaser, keys) {
+    // We only need the keys for editor mode
+    if (this.selector) this.selector.onKey(phaser, keys)
   }
 }
 
-// Represents a room
-function Room (x, y) {
-  // Other Rooms this is linked to
-  this.linkedTo = {}
+function Selector () {
   this.sprite = null
+
+  // The current tween for this sprite
+  this.tween = {isRunning: false}
+
+  this.addToPhaser = function (phaser) {
+    this.sprite = phaser.add.sprite(10, 10, 'selector')
+    this.sprite.blendMode = PIXI.blendModes.ADD
+  }
+
+  this.onKey = function (phaser, keys) {
+    if (!this.tween.isRunning) {
+      phaser.tweens.remove(this.tween)
+
+      var newX
+      var newY
+
+      if (keys.up.isDown) newY = this.sprite.y - 10
+      if (keys.down.isDown) newY = this.sprite.y + 10
+      if (keys.right.isDown) newX = this.sprite.x + 10
+      if (keys.left.isDown) newX = this.sprite.x - 10
+
+      // If we want to move left right XOR up down. Not dianoganlly!
+      if ((!newX && newY) || (newX && !newY)) {
+        var bounds = phaser.stage.getBounds()
+
+        // If we're not trying to move out the map
+        if ((newX >= 0 &&
+          newX <= bounds.width) ||
+          (newY >= 0 &&
+          newY <= bounds.height)) {
+          this.tween = phaser.add.tween(this.sprite)
+          this.tween.to({x: newX, y: newY}, 100, Phaser.Easing.Linear.Out, true)
+        }
+      }
+    }
+  }
+}
+
+// Represents a single block. Can be a floor or a wall
+function Cell (x, y) {
   this.x = x
   this.y = y
+  this.width = 10
+  this.height = 10
+  this.sprite = null
+
+  this.addToPhaser = function (phaser) {
+    this.sprite = phaser.add.sprite((this.x * this.width), (this.y * this.height), this.getSpriteKey())
+  }
 }
+
+// A walkable floor cell
+function Floor (x, y) {
+  Cell.call(this, x, y)
+
+  this.getSpriteKey = function () {
+    return 'floor'
+  }
+}
+
+// A wall.
+function Wall (x, y) {
+  Cell.call(this, x, y)
+
+  this.openNorth = false
+  this.openEast = false
+  this.openSouth = false
+  this.openWest = false
+
+  this.getSpriteKey = function () {
+    var sprite_key = 'wall'
+
+    if (this.openNorth) sprite_key += 'N'
+    if (this.openEast) sprite_key += 'E'
+    if (this.openSouth) sprite_key += 'S'
+    if (this.openWest) sprite_key += 'W'
+
+    // return sprite_key
+    return 'wall'
+  }
+}
+
+inherits(Wall, Cell)
+inherits(Floor, Cell)
 
 module.exports.Maze = Maze
 
-},{"maze.js":4}],3:[function(require,module,exports){
+},{"util":4}],7:[function(require,module,exports){
 /*!
  * jQuery JavaScript Library v2.2.2
  * http://jquery.com/
@@ -10023,426 +10789,4 @@ if ( !noGlobal ) {
 return jQuery;
 }));
 
-},{}],4:[function(require,module,exports){
-'use strict';
-
-/**
- * base function for creating a maze
- *
- * @param {number} sizeX count of rooms on the x axis
- * @param {number} sizeY count of rooms on the y axis
- */
-var maze = function(sizeX, sizeY) {
-  maze._directions = [{x: 0, y: -1}, {x: 1, y: 0}, {x: 0, y: 1}, {x: -1, y: 0}];
-  maze._links = {};
-  maze._path = [];
-  maze._size = {
-    x: sizeX,
-    y: sizeY
-  };
-  maze._visitCount = 0;
-  maze._visited = {};
-
-  // create maze with startpoint
-  maze._create({
-    x: maze._random(1, maze._size.x),
-    y: maze._random(1, maze._size.y)
-  });
-
-  return maze._links;
-};
-
-
-/**
- * this really creates the maze, room for room
- *
- * @param {object} room next room to visit and search, with x- and y-coords
- */
-maze._create = function(room) {
-  var nextRoom;
-
-  // add room to visited rooms and to the path
-  if (maze._visited[room.x + ',' + room.y] === undefined) {
-    maze._visited[room.x + ',' + room.y] = true;
-    ++maze._visitCount;
-  }
-
-  // get next random room
-  nextRoom = maze._getDirection(room);
-
-  if (nextRoom === false) {
-    if (maze._visitCount < maze._size.x * maze._size.y) {
-      // ok, we are stucked, but don't visited all rooms
-      maze._create(maze._path.pop());
-    }
-  } else {
-    maze._path.push(room); // add room to path
-    maze._links[room.x + ',' + room.y + '_' + nextRoom.x + ',' + nextRoom.y] = [
-      room,
-      nextRoom
-    ];
-    maze._create(nextRoom); // go to next room
-  }
-};
-
-
-/**
- * choose the next room to go
- *
- * @param {object} room current room to search, with x- and y-coords
- * @return {object|boolean} returns the next room or false, if we are stucked
- */
-maze._getDirection = function(room) {
-  var directions = [],
-      direction,
-      nextRoom;
-
-  // can we add north?
-  if (room.y !== 1 && !maze._visited[room.x + ',' + (room.y - 1)]) {
-    directions.push(1);
-  }
-
-  // can we add east?
-  if (room.x !== maze._size.x && !maze._visited[(room.x + 1) + ',' + room.y]) {
-    directions.push(2);
-  }
-
-  // can we add south?
-  if (room.y !== maze._size.y && !maze._visited[room.x + ',' + (room.y + 1)]) {
-    directions.push(3);
-  }
-
-  // can we add west?
-  if (room.x !== 1 && !maze._visited[(room.x - 1) + ',' + room.y]) {
-    directions.push(4);
-  }
-
-  if (directions.length === 0) {
-    nextRoom = false;
-  } else {
-    direction = directions[maze._random(0, directions.length - 1)] - 1;
-    nextRoom = {
-      x: room.x + maze._directions[direction].x,
-      y: room.y + maze._directions[direction].y
-    };
-  }
-
-  return nextRoom;
-};
-
-
-/**
- * generates a random number between two numbers
- *
- * @param {number} min minimum number
- * @param {number} max maximum number
- */
-
-var rnd = require('random-seed').create()
-maze._random = function(min, max) {
-  return rnd.intBetween(min, max)
-  //return min + parseInt(Math.random() * (max - min + 1), 10);
-}
-
-module.exports = maze;
-
-},{"random-seed":5}],5:[function(require,module,exports){
-/*
- * random-seed
- * https://github.com/skratchdot/random-seed
- *
- * This code was originally written by Steve Gibson and can be found here:
- *
- * https://www.grc.com/otg/uheprng.htm
- *
- * It was slightly modified for use in node, to pass jshint, and a few additional
- * helper functions were added.
- *
- * Copyright (c) 2013 skratchdot
- * Dual Licensed under the MIT license and the original GRC copyright/license
- * included below.
- */
-/*	============================================================================
-									Gibson Research Corporation
-				UHEPRNG - Ultra High Entropy Pseudo-Random Number Generator
-	============================================================================
-	LICENSE AND COPYRIGHT:  THIS CODE IS HEREBY RELEASED INTO THE PUBLIC DOMAIN
-	Gibson Research Corporation releases and disclaims ALL RIGHTS AND TITLE IN
-	THIS CODE OR ANY DERIVATIVES. Anyone may be freely use it for any purpose.
-	============================================================================
-	This is GRC's cryptographically strong PRNG (pseudo-random number generator)
-	for JavaScript. It is driven by 1536 bits of entropy, stored in an array of
-	48, 32-bit JavaScript variables.  Since many applications of this generator,
-	including ours with the "Off The Grid" Latin Square generator, may require
-	the deteriministic re-generation of a sequence of PRNs, this PRNG's initial
-	entropic state can be read and written as a static whole, and incrementally
-	evolved by pouring new source entropy into the generator's internal state.
-	----------------------------------------------------------------------------
-	ENDLESS THANKS are due Johannes Baagoe for his careful development of highly
-	robust JavaScript implementations of JS PRNGs.  This work was based upon his
-	JavaScript "Alea" PRNG which is based upon the extremely robust Multiply-
-	With-Carry (MWC) PRNG invented by George Marsaglia. MWC Algorithm References:
-	http://www.GRC.com/otg/Marsaglia_PRNGs.pdf
-	http://www.GRC.com/otg/Marsaglia_MWC_Generators.pdf
-	----------------------------------------------------------------------------
-	The quality of this algorithm's pseudo-random numbers have been verified by
-	multiple independent researchers. It handily passes the fermilab.ch tests as
-	well as the "diehard" and "dieharder" test suites.  For individuals wishing
-	to further verify the quality of this algorithm's pseudo-random numbers, a
-	256-megabyte file of this algorithm's output may be downloaded from GRC.com,
-	and a Microsoft Windows scripting host (WSH) version of this algorithm may be
-	downloaded and run from the Windows command prompt to generate unique files
-	of any size:
-	The Fermilab "ENT" tests: http://fourmilab.ch/random/
-	The 256-megabyte sample PRN file at GRC: https://www.GRC.com/otg/uheprng.bin
-	The Windows scripting host version: https://www.GRC.com/otg/wsh-uheprng.js
-	----------------------------------------------------------------------------
-	Qualifying MWC multipliers are: 187884, 686118, 898134, 1104375, 1250205,
-	1460910 and 1768863. (We use the largest one that's < 2^21)
-	============================================================================ */
-'use strict';
-var stringify = require('json-stringify-safe');
-
-/*	============================================================================
-This is based upon Johannes Baagoe's carefully designed and efficient hash
-function for use with JavaScript.  It has a proven "avalanche" effect such
-that every bit of the input affects every bit of the output 50% of the time,
-which is good.	See: http://baagoe.com/en/RandomMusings/hash/avalanche.xhtml
-============================================================================
-*/
-var Mash = function () {
-	var n = 0xefc8249d;
-	var mash = function (data) {
-		if (data) {
-			data = data.toString();
-			for (var i = 0; i < data.length; i++) {
-				n += data.charCodeAt(i);
-				var h = 0.02519603282416938 * n;
-				n = h >>> 0;
-				h -= n;
-				h *= n;
-				n = h >>> 0;
-				h -= n;
-				n += h * 0x100000000; // 2^32
-			}
-			return (n >>> 0) * 2.3283064365386963e-10; // 2^-32
-		} else {
-			n = 0xefc8249d;
-		}
-	};
-	return mash;
-};
-
-var uheprng = function (seed) {
-	return (function () {
-		var o = 48; // set the 'order' number of ENTROPY-holding 32-bit values
-		var c = 1; // init the 'carry' used by the multiply-with-carry (MWC) algorithm
-		var p = o; // init the 'phase' (max-1) of the intermediate variable pointer
-		var s = new Array(o); // declare our intermediate variables array
-		var i; // general purpose local
-		var j; // general purpose local
-		var k = 0; // general purpose local
-
-		// when our "uheprng" is initially invoked our PRNG state is initialized from the
-		// browser's own local PRNG. This is okay since although its generator might not
-		// be wonderful, it's useful for establishing large startup entropy for our usage.
-		var mash = new Mash(); // get a pointer to our high-performance "Mash" hash
-
-		// fill the array with initial mash hash values
-		for (i = 0; i < o; i++) {
-			s[i] = mash(Math.random());
-		}
-
-		// this PRIVATE (internal access only) function is the heart of the multiply-with-carry
-		// (MWC) PRNG algorithm. When called it returns a pseudo-random number in the form of a
-		// 32-bit JavaScript fraction (0.0 to <1.0) it is a PRIVATE function used by the default
-		// [0-1] return function, and by the random 'string(n)' function which returns 'n'
-		// characters from 33 to 126.
-		var rawprng = function () {
-			if (++p >= o) {
-				p = 0;
-			}
-			var t = 1768863 * s[p] + c * 2.3283064365386963e-10; // 2^-32
-			return s[p] = t - (c = t | 0);
-		};
-
-		// this EXPORTED function is the default function returned by this library.
-		// The values returned are integers in the range from 0 to range-1. We first
-		// obtain two 32-bit fractions (from rawprng) to synthesize a single high
-		// resolution 53-bit prng (0 to <1), then we multiply this by the caller's
-		// "range" param and take the "floor" to return a equally probable integer.
-		var random = function (range) {
-			return Math.floor(range * (rawprng() + (rawprng() * 0x200000 | 0) * 1.1102230246251565e-16)); // 2^-53
-		};
-
-		// this EXPORTED function 'string(n)' returns a pseudo-random string of
-		// 'n' printable characters ranging from chr(33) to chr(126) inclusive.
-		random.string = function (count) {
-			var i;
-			var s = '';
-			for (i = 0; i < count; i++) {
-				s += String.fromCharCode(33 + random(94));
-			}
-			return s;
-		};
-
-		// this PRIVATE "hash" function is used to evolve the generator's internal
-		// entropy state. It is also called by the EXPORTED addEntropy() function
-		// which is used to pour entropy into the PRNG.
-		var hash = function () {
-			var args = Array.prototype.slice.call(arguments);
-			for (i = 0; i < args.length; i++) {
-				for (j = 0; j < o; j++) {
-					s[j] -= mash(args[i]);
-					if (s[j] < 0) {
-						s[j] += 1;
-					}
-				}
-			}
-		};
-
-		// this EXPORTED "clean string" function removes leading and trailing spaces and non-printing
-		// control characters, including any embedded carriage-return (CR) and line-feed (LF) characters,
-		// from any string it is handed. this is also used by the 'hashstring' function (below) to help
-		// users always obtain the same EFFECTIVE uheprng seeding key.
-		random.cleanString = function (inStr) {
-			inStr = inStr.replace(/(^\s*)|(\s*$)/gi, ''); // remove any/all leading spaces
-			inStr = inStr.replace(/[\x00-\x1F]/gi, ''); // remove any/all control characters
-			inStr = inStr.replace(/\n /, '\n'); // remove any/all trailing spaces
-			return inStr; // return the cleaned up result
-		};
-
-		// this EXPORTED "hash string" function hashes the provided character string after first removing
-		// any leading or trailing spaces and ignoring any embedded carriage returns (CR) or Line Feeds (LF)
-		random.hashString = function (inStr) {
-			inStr = random.cleanString(inStr);
-			mash(inStr); // use the string to evolve the 'mash' state
-			for (i = 0; i < inStr.length; i++) { // scan through the characters in our string
-				k = inStr.charCodeAt(i); // get the character code at the location
-				for (j = 0; j < o; j++) { //	"mash" it into the UHEPRNG state
-					s[j] -= mash(k);
-					if (s[j] < 0) {
-						s[j] += 1;
-					}
-				}
-			}
-		};
-
-		// this EXPORTED function allows you to seed the random generator.
-		random.seed = function (seed) {
-			if (typeof seed === 'undefined' || seed === null) {
-				seed = Math.random();
-			}
-			if (typeof seed !== 'string') {
-				seed = stringify(seed, function (key, value) {
-					if (typeof value === 'function') {
-						return (value).toString();
-					}
-					return value;
-				});
-			}
-			random.initState();
-			random.hashString(seed);
-		};
-
-		// this handy exported function is used to add entropy to our uheprng at any time
-		random.addEntropy = function ( /* accept zero or more arguments */ ) {
-			var args = [];
-			for (i = 0; i < arguments.length; i++) {
-				args.push(arguments[i]);
-			}
-			hash((k++) + (new Date().getTime()) + args.join('') + Math.random());
-		};
-
-		// if we want to provide a deterministic startup context for our PRNG,
-		// but without directly setting the internal state variables, this allows
-		// us to initialize the mash hash and PRNG's internal state before providing
-		// some hashing input
-		random.initState = function () {
-			mash(); // pass a null arg to force mash hash to init
-			for (i = 0; i < o; i++) {
-				s[i] = mash(' '); // fill the array with initial mash hash values
-			}
-			c = 1; // init our multiply-with-carry carry
-			p = o; // init our phase
-		};
-
-		// we use this (optional) exported function to signal the JavaScript interpreter
-		// that we're finished using the "Mash" hash function so that it can free up the
-		// local "instance variables" is will have been maintaining.  It's not strictly
-		// necessary, of course, but it's good JavaScript citizenship.
-		random.done = function () {
-			mash = null;
-		};
-
-		// if we called "uheprng" with a seed value, then execute random.seed() before returning
-		if (typeof seed !== 'undefined') {
-			random.seed(seed);
-		}
-
-		// Returns a random integer between 0 (inclusive) and range (exclusive)
-		random.range = function (range) {
-			return random(range);
-		};
-
-		// Returns a random float between 0 (inclusive) and 1 (exclusive)
-		random.random = function () {
-			return random(Number.MAX_VALUE - 1) / Number.MAX_VALUE;
-		};
-
-		// Returns a random float between min (inclusive) and max (exclusive)
-		random.floatBetween = function (min, max) {
-			return random.random() * (max - min) + min;
-		};
-
-		// Returns a random integer between min (inclusive) and max (inclusive)
-		random.intBetween = function (min, max) {
-			return Math.floor(random.random() * (max - min + 1)) + min;
-		};
-
-		// when our main outer "uheprng" function is called, after setting up our
-		// initial variables and entropic state, we return an "instance pointer"
-		// to the internal anonymous function which can then be used to access
-		// the uheprng's various exported functions.  As with the ".done" function
-		// above, we should set the returned value to 'null' once we're finished
-		// using any of these functions.
-		return random;
-	}());
-};
-
-// Modification for use in node:
-uheprng.create = function (seed) {
-	return new uheprng(seed);
-};
-module.exports = uheprng;
-
-},{"json-stringify-safe":6}],6:[function(require,module,exports){
-exports = module.exports = stringify
-exports.getSerialize = serializer
-
-function stringify(obj, replacer, spaces, cycleReplacer) {
-  return JSON.stringify(obj, serializer(replacer, cycleReplacer), spaces)
-}
-
-function serializer(replacer, cycleReplacer) {
-  var stack = [], keys = []
-
-  if (cycleReplacer == null) cycleReplacer = function(key, value) {
-    if (stack[0] === value) return "[Circular ~]"
-    return "[Circular ~." + keys.slice(0, stack.indexOf(value)).join(".") + "]"
-  }
-
-  return function(key, value) {
-    if (stack.length > 0) {
-      var thisPos = stack.indexOf(this)
-      ~thisPos ? stack.splice(thisPos + 1) : stack.push(this)
-      ~thisPos ? keys.splice(thisPos, Infinity, key) : keys.push(key)
-      if (~stack.indexOf(value)) value = cycleReplacer.call(this, key, value)
-    }
-    else stack.push(value)
-
-    return replacer == null ? value : replacer.call(this, key, value)
-  }
-}
-
-},{}]},{},[1]);
+},{}]},{},[5]);
