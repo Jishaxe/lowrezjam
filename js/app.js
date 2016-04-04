@@ -36,7 +36,7 @@ function App (gameContainer) {
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
 
     var maze = new Maze()
-    maze.from()
+    maze.blank()
     maze.enableEditor()
 
     self.maze = maze

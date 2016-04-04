@@ -9,18 +9,23 @@ function Maze () {
   this.height = null
   this.cellWidth = 10
   this.cellHeight = 10
+  this.columns = 5
+  this.rows = 5
   this.selector = null
 
   // Parse a maze.js linkset
   this.from = function (json) {
-    for (var x = 1; x <= 30; x++) {
-      for (var y = 1; y <= 30; y++) {
+  }
+
+  this.blank = function () {
+    for (var x = 1; x <= this.columns; x++) {
+      for (var y = 1; y <= this.rows; y++) {
         this.cells[x + ',' + y] = new Wall(x, y)
       }
     }
 
-    this.width = 30 * this.cellWidth
-    this.height = 30 * this.cellHeight
+    this.width = this.columns * this.cellWidth
+    this.height = this.rows * this.cellHeight
   }
 
   this.enableEditor = function () {
@@ -43,6 +48,28 @@ function Maze () {
   this.onKey = function (phaser, keys) {
     // We only need the keys for editor mode
     if (this.selector) this.selector.onKey(phaser, keys)
+  }
+
+  // Convert this maze to JSON
+  this.toJSON = function () {
+    var json = {}
+    json.rows = this.rows
+    json.columns = this.columns
+    json.cellWidth = this.cellWidth
+    json.cellHeight = this.cellHeight
+    json.cells = {}
+
+    for (var key in this.cells) {
+      var cell = this.cells[key]
+
+      json.cells[key] = {
+        type: cell.constructor.name,
+        x: cell.x,
+        y: cell.y
+      }
+    }
+
+    return json
   }
 }
 
@@ -85,7 +112,6 @@ function Selector (maze) {
       // Now handle the spacebar
       if (keys.space.isDown && !this.debounce) {
         var cell = this.getCurrentCell()
-        console.log(cell)
 
         // If there is a cell here
         if (cell instanceof Cell) {
@@ -105,6 +131,7 @@ function Selector (maze) {
 
           // Bring the selector to the top
           this.sprite.bringToTop()
+          console.log(JSON.stringify(this.maze.toJSON()))
 
           // Don't space again for 200ms
           this.debounce = true
