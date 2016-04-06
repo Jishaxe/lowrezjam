@@ -9,9 +9,35 @@ function Maze () {
   this.height = null
   this.cellWidth = 10
   this.cellHeight = 10
-  this.columns = 5
-  this.rows = 5
+  this.columns = 8
+  this.rows = 8
   this.selector = null
+
+  // Recalculate all wall connectors
+  this.rerenderWalls = function (phaser) {
+    for (var key in this.cells) {
+      var cell = this.cells[key]
+      cell.openNorth = false
+      cell.openEast = false
+      cell.openWest = false
+      cell.openSouth = false
+      
+      if (cell instanceof Wall) {
+        var north = this.cells[cell.x + ',' + (cell.y - 1)]
+        var east = this.cells[cell.x + 1 + ',' + cell.y]
+        var south = this.cells[cell.x + ',' + (cell.y + 1)]
+        var west = this.cells[cell.x - 1 + ',' + cell.y]
+
+        if (north instanceof Wall) cell.openNorth = true
+        if (east instanceof Wall) cell.openEast = true
+        if (west instanceof Wall) cell.openWest = true
+        if (south instanceof Wall) cell.openSouth = true
+
+        cell.removeFromPhaser(phaser)
+        cell.addToPhaser(phaser)
+      }
+    }
+  }
 
   // Parse a maze.js linkset
   this.from = function (json) {
@@ -151,6 +177,8 @@ function Selector (maze) {
             wall.addToPhaser(phaser)
           }
 
+          this.maze.rerenderWalls(phaser)
+
           // Bring the selector to the top
           this.sprite.bringToTop()
           console.log(JSON.stringify(this.maze.toJSON()))
@@ -210,8 +238,8 @@ function Wall (x, y) {
     if (this.openSouth) sprite_key += 'S'
     if (this.openWest) sprite_key += 'W'
 
-    // return sprite_key
-    return 'wall'
+    return sprite_key
+    //return 'wall'
   }
 }
 
