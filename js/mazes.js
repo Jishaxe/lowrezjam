@@ -42,7 +42,7 @@ function Maze () {
   this.blank = function () {
     for (var x = 1; x <= this.columns; x++) {
       for (var y = 1; y <= this.rows; y++) {
-        this.cells[x + ',' + y] = new Wall(x, y)
+        this.cells[x + ',' + y] = new Floor(x, y)
       }
     }
 
