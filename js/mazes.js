@@ -34,6 +34,9 @@ function Maze () {
 
       this.cells[cell.x + ',' + cell.y] = cell
     }
+
+    this.width = this.columns * this.cellWidth
+    this.height = this.rows * this.cellHeight
   }
 
   this.blank = function () {
