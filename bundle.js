@@ -770,6 +770,21 @@ function App (gameContainer) {
     }
 
     img('wall')
+    img('wallN')
+    img('wallE')
+    img('wallS')
+    img('wallW')
+    img('wallNS')
+    img('wallEW')
+    img('wallNW')
+    img('wallNSW')
+    img('wallES')
+    img('wallESW')
+    img('wallNEW')
+    img('wallSW')
+    img('wallNE')
+    img('wallNES')
+    img('wallNESW')
     img('floor')
     img('selector')
   }
@@ -969,7 +984,7 @@ function Selector (maze) {
 
       if (newX || newY) {
         this.tween = phaser.add.tween(this.sprite)
-        this.tween.to({x: newX, y: newY}, 100, Phaser.Easing.Linear.Out, true)
+        this.tween.to({x: newX, y: newY}, 70, Phaser.Easing.Linear.Out, true)
       }
 
       // Now handle the spacebar

@@ -154,7 +154,7 @@ function Selector (maze) {
 
       if (newX || newY) {
         this.tween = phaser.add.tween(this.sprite)
-        this.tween.to({x: newX, y: newY}, 100, Phaser.Easing.Linear.Out, true)
+        this.tween.to({x: newX, y: newY}, 70, Phaser.Easing.Linear.Out, true)
       }
 
       // Now handle the spacebar
