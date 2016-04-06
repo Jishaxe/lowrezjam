@@ -54,6 +54,21 @@ function App (gameContainer) {
     }
 
     img('wall')
+    img('wallN')
+    img('wallE')
+    img('wallS')
+    img('wallW')
+    img('wallNS')
+    img('wallEW')
+    img('wallNW')
+    img('wallNSW')
+    img('wallES')
+    img('wallESW')
+    img('wallNEW')
+    img('wallSW')
+    img('wallNE')
+    img('wallNES')
+    img('wallNESW')
     img('floor')
     img('selector')
   }
