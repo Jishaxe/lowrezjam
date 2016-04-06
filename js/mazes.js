@@ -15,6 +15,25 @@ function Maze () {
 
   // Parse a maze.js linkset
   this.from = function (json) {
+    this.rows = json.rows
+    this.columns = json.columns
+    this.cellWidth = json.cellWidth
+    this.cellHeight = json.cellHeight
+
+    for (var key in json.cells) {
+      var cellDat = json.cells[key]
+      var cell
+      switch (cellDat.type) {
+        case 'Wall':
+          cell = new Wall(cellDat.x, cellDat.y)
+          break
+        case 'Floor':
+          cell = new Floor(cellDat.x, cellDat.y)
+          break
+      }
+
+      this.cells[cell.x + ',' + cell.y] = cell
+    }
   }
 
   this.blank = function () {

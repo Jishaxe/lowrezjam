@@ -36,7 +36,8 @@ function App (gameContainer) {
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
 
     var maze = new Maze()
-    maze.blank()
+    var json = {"rows":5,"columns":5,"cellWidth":10,"cellHeight":10,"cells":{"1,1":{"type":"Floor","x":1,"y":1},"1,2":{"type":"Wall","x":1,"y":2},"1,3":{"type":"Wall","x":1,"y":3},"1,4":{"type":"Wall","x":1,"y":4},"1,5":{"type":"Floor","x":1,"y":5},"2,1":{"type":"Wall","x":2,"y":1},"2,2":{"type":"Floor","x":2,"y":2},"2,3":{"type":"Wall","x":2,"y":3},"2,4":{"type":"Floor","x":2,"y":4},"2,5":{"type":"Wall","x":2,"y":5},"3,1":{"type":"Wall","x":3,"y":1},"3,2":{"type":"Wall","x":3,"y":2},"3,3":{"type":"Floor","x":3,"y":3},"3,4":{"type":"Wall","x":3,"y":4},"3,5":{"type":"Wall","x":3,"y":5},"4,1":{"type":"Wall","x":4,"y":1},"4,2":{"type":"Floor","x":4,"y":2},"4,3":{"type":"Wall","x":4,"y":3},"4,4":{"type":"Floor","x":4,"y":4},"4,5":{"type":"Wall","x":4,"y":5},"5,1":{"type":"Floor","x":5,"y":1},"5,2":{"type":"Wall","x":5,"y":2},"5,3":{"type":"Wall","x":5,"y":3},"5,4":{"type":"Wall","x":5,"y":4},"5,5":{"type":"Floor","x":5,"y":5}}}
+    maze.from(json)
     maze.enableEditor()
 
     self.maze = maze
