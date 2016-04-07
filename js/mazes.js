@@ -13,6 +13,16 @@ function Maze () {
   this.rows = 8
   this.selector = null
 
+  // Get the start point location
+  this.getStartPoint = function () {
+    for (var key in this.cells) {
+      var cell = this.cells[key]
+      if (cell instanceof Floor) {
+        if (cell.hasStartPoint) return {x: cell.x * this.cellWidth, y: cell.y * this.cellHeight}
+      }
+    }
+  }
+
   // Recalculate all wall connectors
   this.rerenderWalls = function (phaser) {
     for (var key in this.cells) {
@@ -338,6 +348,8 @@ function Floor (x, y) {
     if (this.hasEndPoint) {
       this.endPoint = phaser.add.sprite(this.sprite.x, this.sprite.y, 'endpoint')
     }
+
+    this.sprite.floor = this
   }
 
   this.removeFromPhaser = function (phaser) {
@@ -373,3 +385,4 @@ inherits(Wall, Cell)
 inherits(Floor, Cell)
 
 module.exports.Maze = Maze
+module.exports.Wall = Wall

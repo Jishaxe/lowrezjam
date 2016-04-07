@@ -1,6 +1,7 @@
 /* globals Phaser */
 var $ = require('jquery')
 var Maze = require('./mazes').Maze
+var Player = require('./player')
 
 window.app = new App('#game-container')
 window.app.start()
@@ -11,6 +12,7 @@ function App (gameContainer) {
   this.gameContainer = gameContainer
   this.cursors = null
   this.phaser = null
+  this.player = null
   this.maze = null
 
   // Start game
@@ -40,11 +42,15 @@ function App (gameContainer) {
 
     var maze = new Maze()
     maze.from(test_map)
-    maze.enableEditor()
 
     self.maze = maze
     self.phaser.world.setBounds(0, 0, maze.width, maze.height)
     self.maze.addToPhaser(self.phaser)
+
+    self.player = new Player()
+    var startPoint = self.maze.getStartPoint()
+    self.player.addToPhaser(self.phaser, startPoint.x, startPoint.y)
+    self.player.setupPhysics(self.phaser, self.maze)
   }
 
   // Phaser preload callback
@@ -56,6 +62,7 @@ function App (gameContainer) {
       self.phaser.load.image(key, '/img/' + key + '.png')
     }
 
+    img('player')
     img('startpoint')
     img('endpoint')
     img('petal')
@@ -98,6 +105,10 @@ function App (gameContainer) {
 
   this.onUpdate = function () {
     if (self.maze) self.maze.onKey(self.phaser, self.cursors)
+    if (self.player) {
+      self.player.onKey(self.cursors)
+      self.player.onUpdate(self.phaser, self.maze)
+    }
   }
 
   this.onInit = function () {
