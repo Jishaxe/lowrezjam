@@ -90,6 +90,8 @@ function Maze () {
       cell.addToPhaser(phaser)
     }
 
+    this.rerenderWalls(phaser)
+
     if (this.selector) {
       this.selector.addToPhaser(phaser)
       phaser.camera.follow(this.selector.sprite, Phaser.Camera.FOLLOW_TOPDOWN)
