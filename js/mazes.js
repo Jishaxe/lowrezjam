@@ -55,6 +55,9 @@ function Maze () {
           break
         case 'Floor':
           cell = new Floor(cellDat.x, cellDat.y)
+          cell.hasPetal = cellDat.hasPetal
+          cell.hasStartPoint = cellDat.hasStartPoint
+          cell.hasEndPoint = cellDat.hasEndPoint
           break
       }
 
@@ -115,6 +118,12 @@ function Maze () {
         x: cell.x,
         y: cell.y
       }
+
+      if (cell instanceof Floor) {
+        json.cells[key].hasPetal = cell.hasPetal
+        json.cells[key].hasStartPoint = cell.hasStartPoint
+        json.cells[key].hasEndPoint = cell.hasEndPoint
+      }
     }
 
     return json
@@ -157,9 +166,35 @@ function Selector (maze) {
         this.tween.to({x: newX, y: newY}, 70, Phaser.Easing.Linear.Out, true)
       }
 
+      var cell
+      var self = this
+      var setDebounce = function () {
+        self.debounce = true
+        setTimeout(function () {
+          self.debounce = false
+        }, 500)
+      }
+
+
+      // Handle the 1 key for adding a petal
+      if (keys.one.isDown && !this.debounce) {
+        cell = this.getCurrentCell()
+
+        // We can only have petals on Floors
+        if (cell instanceof Wall) return
+
+        cell.hasPetal = !cell.hasPetal
+        cell.removeFromPhaser(phaser)
+        cell.addToPhaser(phaser)
+        this.sprite.bringToTop()
+
+        // Don't petal again for 500ms
+        setDebounce()
+      }
+
       // Now handle the spacebar
       if (keys.space.isDown && !this.debounce) {
-        var cell = this.getCurrentCell()
+        cell = this.getCurrentCell()
 
         // If there is a cell here
         if (cell instanceof Cell) {
@@ -183,12 +218,8 @@ function Selector (maze) {
           this.sprite.bringToTop()
           console.log(JSON.stringify(this.maze.toJSON()))
 
-          // Don't space again for 200ms
-          this.debounce = true
-          var self = this
-          setTimeout(function () {
-            self.debounce = false
-          }, 500)
+          // Don't space again for 500ms
+          setDebounce()
         }
       }
     }
@@ -214,10 +245,29 @@ function Cell (x, y) {
 
 // A walkable floor cell
 function Floor (x, y) {
+  this.petal = null
+
   Cell.call(this, x, y)
 
+  this.hasPetal = false
+  this.hasStartPoint = false
+  this.hasEndPoint = false
   this.getSpriteKey = function () {
     return 'floor'
+  }
+
+  this.addToPhaser = function (phaser) {
+    // TODO: more DRY!
+    this.sprite = phaser.add.sprite((this.x * this.width), (this.y * this.height), this.getSpriteKey())
+
+    if (this.hasPetal) {
+      this.petal = phaser.add.sprite(this.sprite.x, this.sprite.y, 'petal')
+    }
+  }
+
+  this.removeFromPhaser = function (phaser) {
+    this.sprite.destroy()
+    if (this.petal) this.petal.destroy()
   }
 }
 

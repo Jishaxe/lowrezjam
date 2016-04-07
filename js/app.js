@@ -31,6 +31,7 @@ function App (gameContainer) {
     // Grab the arrow keys
     self.cursors = self.phaser.input.keyboard.createCursorKeys()
     self.cursors.space = self.phaser.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+    self.cursors.one = self.phaser.input.keyboard.addKey(Phaser.KeyCode.ONE)
 
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
@@ -53,6 +54,7 @@ function App (gameContainer) {
       self.phaser.load.image(key, '/img/' + key + '.png')
     }
 
+    img('petal')
     img('wall')
     img('wallN')
     img('wallE')
