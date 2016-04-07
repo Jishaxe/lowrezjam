@@ -748,6 +748,8 @@ function App (gameContainer) {
     self.cursors = self.phaser.input.keyboard.createCursorKeys()
     self.cursors.space = self.phaser.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
     self.cursors.one = self.phaser.input.keyboard.addKey(Phaser.KeyCode.ONE)
+    self.cursors.two = self.phaser.input.keyboard.addKey(Phaser.KeyCode.TWO)
+    self.cursors.three = self.phaser.input.keyboard.addKey(Phaser.KeyCode.THREE)
 
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
@@ -770,6 +772,8 @@ function App (gameContainer) {
       self.phaser.load.image(key, '/img/' + key + '.png')
     }
 
+    img('startpoint')
+    img('endpoint')
     img('petal')
     img('wall')
     img('wallN')
@@ -1007,6 +1011,69 @@ function Selector (maze) {
         }, 500)
       }
 
+      // Handle the 3 key for setting a end point
+      if (keys.three.isDown && !this.debounce) {
+        cell = this.getCurrentCell()
+
+        // We can only have a start point on the floor
+        if (cell instanceof Wall) return
+
+        // Remove any other end points
+        if (!cell.hasStartPoint) {
+          for (var key2 in this.maze.cells) {
+            var cell3 = this.maze.cells[key2]
+            if (cell3 instanceof Floor) {
+              if (cell3.hasEndPoint) {
+                cell3.hasEndPoint = false
+                cell3.removeFromPhaser(phaser)
+                cell3.addToPhaser(phaser)
+              }
+            }
+          }
+
+          cell.hasEndPoint = true
+        } else {
+          cell.hasEndPoint = false
+        }
+
+        cell.removeFromPhaser(phaser)
+        cell.addToPhaser(phaser)
+        this.sprite.bringToTop()
+
+        setDebounce()
+      }
+
+      // Handle the 2 key for setting a start point
+      if (keys.two.isDown && !this.debounce) {
+        cell = this.getCurrentCell()
+
+        // We can only have a start point on the floor
+        if (cell instanceof Wall) return
+
+        // Remove any other start points
+        if (!cell.hasStartPoint) {
+          for (var key in this.maze.cells) {
+            var cell2 = this.maze.cells[key]
+            if (cell2 instanceof Floor) {
+              if (cell2.hasStartPoint) {
+                cell2.hasStartPoint = false
+                cell2.removeFromPhaser(phaser)
+                cell2.addToPhaser(phaser)
+              }
+            }
+          }
+
+          cell.hasStartPoint = true
+        } else {
+          cell.hasStartPoint = false
+        }
+
+        cell.removeFromPhaser(phaser)
+        cell.addToPhaser(phaser)
+        this.sprite.bringToTop()
+
+        setDebounce()
+      }
 
       // Handle the 1 key for adding a petal
       if (keys.one.isDown && !this.debounce) {
@@ -1078,6 +1145,8 @@ function Cell (x, y) {
 // A walkable floor cell
 function Floor (x, y) {
   this.petal = null
+  this.startPoint = null
+  this.endPoint = null
 
   Cell.call(this, x, y)
 
@@ -1095,11 +1164,21 @@ function Floor (x, y) {
     if (this.hasPetal) {
       this.petal = phaser.add.sprite(this.sprite.x, this.sprite.y, 'petal')
     }
+
+    if (this.hasStartPoint) {
+      this.startPoint = phaser.add.sprite(this.sprite.x, this.sprite.y, 'startpoint')
+    }
+
+    if (this.hasEndPoint) {
+      this.endPoint = phaser.add.sprite(this.sprite.x, this.sprite.y, 'endpoint')
+    }
   }
 
   this.removeFromPhaser = function (phaser) {
     this.sprite.destroy()
     if (this.petal) this.petal.destroy()
+    if (this.startPoint) this.startPoint.destroy()
+    if (this.endPoint) this.endPoint.destroy()
   }
 }
 

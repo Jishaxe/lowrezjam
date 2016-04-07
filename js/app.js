@@ -32,6 +32,8 @@ function App (gameContainer) {
     self.cursors = self.phaser.input.keyboard.createCursorKeys()
     self.cursors.space = self.phaser.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
     self.cursors.one = self.phaser.input.keyboard.addKey(Phaser.KeyCode.ONE)
+    self.cursors.two = self.phaser.input.keyboard.addKey(Phaser.KeyCode.TWO)
+    self.cursors.three = self.phaser.input.keyboard.addKey(Phaser.KeyCode.THREE)
 
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
@@ -54,6 +56,8 @@ function App (gameContainer) {
       self.phaser.load.image(key, '/img/' + key + '.png')
     }
 
+    img('startpoint')
+    img('endpoint')
     img('petal')
     img('wall')
     img('wallN')
