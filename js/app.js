@@ -1,7 +1,8 @@
 /* globals Phaser */
 var $ = require('jquery')
-var Maze = require('./mazes').Maze
-var Player = require('./player')
+// var Maze = require('./mazes').Maze
+// var Player = require('./player')
+var Minigame = require('./minigame')
 
 window.app = new App('#game-container')
 window.app.start()
@@ -14,6 +15,7 @@ function App (gameContainer) {
   this.phaser = null
   this.player = null
   this.maze = null
+  this.minigame = null
 
   // Start game
   this.start = function () {
@@ -40,6 +42,7 @@ function App (gameContainer) {
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
 
+    /*
     var maze = new Maze()
     maze.from(test_map)
 
@@ -51,6 +54,10 @@ function App (gameContainer) {
     var startPoint = self.maze.getStartPoint()
     self.player.addToPhaser(self.phaser, startPoint.x, startPoint.y)
     self.player.setupPhysics(self.phaser, self.maze)
+    */
+
+    self.minigame = new Minigame()
+    self.minigame.addToPhaser(self.phaser)
   }
 
   // Phaser preload callback
@@ -65,6 +72,7 @@ function App (gameContainer) {
     img('player')
     img('startpoint')
     img('endpoint')
+    img('tinypetal')
     img('petal')
     img('wall')
     img('wallN')
@@ -108,6 +116,11 @@ function App (gameContainer) {
     if (self.player) {
       self.player.onKey(self.cursors)
       self.player.onUpdate(self.phaser, self.maze)
+    }
+
+    if (self.minigame) {
+      self.minigame.onKey(self.phaser, self.cursors)
+      self.minigame.onUpdate(self.phaser)
     }
   }
 
