@@ -20,7 +20,7 @@ function Minigame () {
     }
 
     // Jump if we're not in the air already
-    if (keys.space.isDown && this.player.body.onFloor()) this.player.body.velocity.y = -80
+    if (keys.up.isDown && this.player.body.onFloor()) this.player.body.velocity.y = -80
 
     if (!keys.left.isDown && !keys.right.isDown) this.player.body.velocity.x = 0
   }
