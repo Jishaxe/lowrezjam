@@ -13,6 +13,15 @@ function Maze () {
   this.rows = 8
   this.selector = null
 
+  // Removes this maze from phaser
+  this.removeFromPhaser = function (phaser) {
+    for (var key in this.cells) {
+      this.cells[key].removeFromPhaser(phaser)
+    }
+
+    if (this.selector) this.selector.removeFromPhaser(phaser)
+  }
+
   // Get the start point location
   this.getStartPoint = function () {
     for (var key in this.cells) {

@@ -1,7 +1,7 @@
 /* globals Phaser */
 var $ = require('jquery')
-// var Maze = require('./mazes').Maze
-// var Player = require('./player')
+var Maze = require('./mazes').Maze
+var Player = require('./player')
 var Minigame = require('./minigame')
 
 window.app = new App('#game-container')
@@ -29,6 +29,40 @@ function App (gameContainer) {
     $('#container').css('opacity', 1)
   }
 
+
+  this.playMaze = function (json) {
+    var maze = new Maze()
+    maze.from(json)
+
+    self.maze = maze
+    self.phaser.world.setBounds(0, 0, maze.width, maze.height)
+    self.maze.addToPhaser(self.phaser)
+
+    self.player = new Player()
+    var startPoint = self.maze.getStartPoint()
+    self.player.addToPhaser(self.phaser, startPoint.x, startPoint.y)
+    self.player.setupPhysics(self.phaser, self.maze)
+
+    self.player.on('complete', function () {
+      self.playMinigame()
+    })
+  }
+
+  this.playMinigame = function () {
+    if (this.maze) {
+      this.maze.removeFromPhaser(self.phaser)
+      this.maze = null
+    }
+
+    if (this.player) {
+      this.player.removeFromPhaser(self.phaser)
+      this.player = null
+    }
+
+    self.minigame = new Minigame()
+    self.minigame.addToPhaser(self.phaser)
+  }
+
   // Phaser create callback
   // Once phaser is ready to go, gen and load a new maze
   this.onCreate = function () {
@@ -41,23 +75,7 @@ function App (gameContainer) {
 
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
-
-    /*
-    var maze = new Maze()
-    maze.from(test_map)
-
-    self.maze = maze
-    self.phaser.world.setBounds(0, 0, maze.width, maze.height)
-    self.maze.addToPhaser(self.phaser)
-
-    self.player = new Player()
-    var startPoint = self.maze.getStartPoint()
-    self.player.addToPhaser(self.phaser, startPoint.x, startPoint.y)
-    self.player.setupPhysics(self.phaser, self.maze)
-    */
-
-    self.minigame = new Minigame()
-    self.minigame.addToPhaser(self.phaser)
+    self.playMaze(test_map)
   }
 
   // Phaser preload callback

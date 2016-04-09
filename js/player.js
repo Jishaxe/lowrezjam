@@ -1,15 +1,28 @@
 /* globals Phaser */
 var Wall = require('./mazes').Wall
+var EventEmitter = require('events').EventEmitter
+var inherits = require('util').inherits
 
 // Represents a player in the game
 function Player () {
+  EventEmitter.call(this)
+  var self = this
+
   this.sprite = null
   this.speed = 60
+
+  this.removeFromPhaser = function (phaser) {
+    this.sprite.destroy()  
+  }
 
   this.addToPhaser = function (phaser, x, y) {
     // 6 x 8
     this.sprite = phaser.add.sprite(x, y, 'player')
     phaser.camera.follow(this.sprite, Phaser.Camera.FOLLOW_TOPDOWN)
+  }
+
+  this.end = function () {
+    this.emit('complete')
   }
 
   this.collidedWithFloor = function (player, floorSprite) {
@@ -18,8 +31,10 @@ function Player () {
       floor.hasPetal = false
       floor.removeFromPhaser(this.phaser)
       floor.addToPhaser(this.phaser)
-      this.sprite.bringToTop()
+      self.sprite.bringToTop()
     }
+
+    if (floor.hasEndPoint) self.end()
 
     return true
   }
@@ -76,4 +91,5 @@ function Player () {
   }
 }
 
+inherits(Player, EventEmitter)
 module.exports = Player
