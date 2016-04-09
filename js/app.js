@@ -69,6 +69,7 @@ function App (gameContainer) {
       self.phaser.load.image(key, '/img/' + key + '.png')
     }
 
+    img('pop')
     img('player')
     img('startpoint')
     img('endpoint')
