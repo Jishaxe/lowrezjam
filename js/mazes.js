@@ -351,14 +351,17 @@ function Floor (x, y) {
 
     if (this.hasPetal) {
       this.petal = phaser.add.sprite(this.sprite.x, this.sprite.y, 'petal')
+      this.petal.bringToTop()
     }
 
     if (this.hasStartPoint) {
       this.startPoint = phaser.add.sprite(this.sprite.x, this.sprite.y, 'startpoint')
+      this.startPoint.bringToTop()
     }
 
     if (this.hasEndPoint) {
       this.endPoint = phaser.add.sprite(this.sprite.x, this.sprite.y, 'endpoint')
+      this.endPoint.bringToTop()
     }
 
     this.sprite.cell = this

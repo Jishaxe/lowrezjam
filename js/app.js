@@ -32,13 +32,11 @@ function App (gameContainer) {
 
   this.playMaze = function (json) {
     var maze = new Maze()
-    maze.from(MazeData[1])
+    maze.from(MazeData[0])
     // maze.enableEditor()
     self.maze = maze
     self.phaser.world.setBounds(0, 0, maze.width, maze.height)
     self.maze.addToPhaser(self.phaser)
-
-
     self.player = new Player()
     var startPoint = self.maze.getStartPoint()
     self.player.addToPhaser(self.phaser, startPoint.x, startPoint.y)
