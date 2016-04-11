@@ -1048,10 +1048,10 @@ function App (gameContainer) {
 
   this.playMaze = function (json) {
     var maze = new Maze()
-    maze.from(MazeData[0])
+    maze.from(MazeData[1])
     // maze.enableEditor()
     self.maze = maze
-    self.phaser.world.setBounds(0, 0, maze.width, maze.height)
+    self.phaser.world.setBounds(0, 0, 9000, 9000)
     self.maze.addToPhaser(self.phaser)
     self.player = new Player()
     var startPoint = self.maze.getStartPoint()
@@ -1102,28 +1102,32 @@ function App (gameContainer) {
       self.phaser.load.image(key, '/img/' + key + '.png')
     }
 
+    var sheet = function (key) {
+      self.phaser.load.spritesheet(key, '/img/' + key + '.png', 20, 20)
+    }
+
     img('pop')
     img('player')
     img('startpoint')
     img('endpoint')
     img('tinypetal')
     img('petal')
-    img('wall')
-    img('wallN')
-    img('wallE')
-    img('wallS')
-    img('wallW')
-    img('wallNS')
-    img('wallEW')
-    img('wallNW')
-    img('wallNSW')
-    img('wallES')
-    img('wallESW')
-    img('wallNEW')
-    img('wallSW')
-    img('wallNE')
-    img('wallNES')
-    img('wallNESW')
+    sheet('wall')
+    sheet('wallN')
+    sheet('wallE')
+    sheet('wallS')
+    sheet('wallW')
+    sheet('wallNS')
+    sheet('wallEW')
+    sheet('wallNW')
+    sheet('wallNSW')
+    sheet('wallES')
+    sheet('wallESW')
+    sheet('wallNEW')
+    sheet('wallSW')
+    sheet('wallNE')
+    sheet('wallNES')
+    sheet('wallNESW')
     img('floor')
     img('selector')
   }
@@ -1217,7 +1221,7 @@ function Maze () {
     for (var key in this.cells) {
       var cell = this.cells[key]
       if (cell instanceof Floor) {
-        if (cell.hasStartPoint) return {x: cell.x * this.cellWidth, y: cell.y * this.cellHeight}
+        if (cell.hasStartPoint) return {x: cell.x * cell.width, y: cell.y * cell.width}
       }
     }
   }
@@ -1264,7 +1268,7 @@ function Maze () {
           break
         case 'Floor':
           cell = new Floor(cellDat.x, cellDat.y)
-          cell.hasPetal = cellDat.hasPetal
+          cell.hasPetal = false // cellDat.hasPetal
           cell.hasStartPoint = cellDat.hasStartPoint
           cell.hasEndPoint = cellDat.hasEndPoint
           break
@@ -1507,8 +1511,8 @@ function Selector (maze) {
 function Cell (x, y) {
   this.x = x
   this.y = y
-  this.width = 10
-  this.height = 10
+  this.width = 20
+  this.height = 20
   this.sprite = null
 
   this.addToPhaser = function (phaser) {

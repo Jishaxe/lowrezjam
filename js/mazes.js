@@ -27,7 +27,7 @@ function Maze () {
     for (var key in this.cells) {
       var cell = this.cells[key]
       if (cell instanceof Floor) {
-        if (cell.hasStartPoint) return {x: cell.x * this.cellWidth, y: cell.y * this.cellHeight}
+        if (cell.hasStartPoint) return {x: cell.x * cell.width, y: cell.y * cell.width}
       }
     }
   }
@@ -74,7 +74,7 @@ function Maze () {
           break
         case 'Floor':
           cell = new Floor(cellDat.x, cellDat.y)
-          cell.hasPetal = cellDat.hasPetal
+          cell.hasPetal = false // cellDat.hasPetal
           cell.hasStartPoint = cellDat.hasStartPoint
           cell.hasEndPoint = cellDat.hasEndPoint
           break
@@ -317,8 +317,8 @@ function Selector (maze) {
 function Cell (x, y) {
   this.x = x
   this.y = y
-  this.width = 10
-  this.height = 10
+  this.width = 20
+  this.height = 20
   this.sprite = null
 
   this.addToPhaser = function (phaser) {
