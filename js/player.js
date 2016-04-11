@@ -50,10 +50,10 @@ function Player () {
         cell.sprite.body.immovable = true
       } else {
         // Collide with floors that have a petal, start point or end point
-        if (cell.hasPetal || cell.hasStartPoint || cell.hasEndPoint) {
+        if (cell.hasPetal || cell.hasEndPoint) {
           this.floors.add(cell.sprite)
           cell.sprite.body.immovable = true
-          cell.sprite.body.setSize(8, 8, 1, 1)
+          // cell.sprite.body.setSize(8, 8, 1, 1)
 
           if (cell.hasPetal) cell.petal.bringToTop()
           if (cell.hasStartPoint) cell.startPoint.bringToTop()
@@ -72,9 +72,13 @@ function Player () {
 
       if (floor.hasPetal) {
         floor.hasPetal = false
+        /*
         floor.removeFromPhaser(phaser)
         floor.addToPhaser(phaser)
-        self.sprite.bringToTop()
+        self.sprite.bringToTop()*/
+        phaser.physics.enable(floor.petal, Phaser.Physics.ARCADE)
+        floor.petal.body.gravity.y = 300
+        floor.petal.body.velocity.x = phaser.rnd.between(-50, 50)
       }
 
       if (floor.hasEndPoint) self.end()

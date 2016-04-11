@@ -35,7 +35,7 @@ function App (gameContainer) {
     maze.from(MazeData[1])
     // maze.enableEditor()
     self.maze = maze
-    self.phaser.world.setBounds(0, 0, 9000, 9000)
+    self.phaser.world.setBounds(0, 0, 20000, 20000)
     self.maze.addToPhaser(self.phaser)
     self.player = new Player()
     var startPoint = self.maze.getStartPoint()

@@ -74,7 +74,7 @@ function Maze () {
           break
         case 'Floor':
           cell = new Floor(cellDat.x, cellDat.y)
-          cell.hasPetal = false // cellDat.hasPetal
+          cell.hasPetal = cellDat.hasPetal
           cell.hasStartPoint = cellDat.hasStartPoint
           cell.hasEndPoint = cellDat.hasEndPoint
           break
