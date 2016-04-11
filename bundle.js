@@ -1049,10 +1049,11 @@ function App (gameContainer) {
   this.playMaze = function (json) {
     var maze = new Maze()
     maze.from(MazeData[1])
-    //maze.enableEditor()
+    // maze.enableEditor()
     self.maze = maze
     self.phaser.world.setBounds(0, 0, maze.width, maze.height)
     self.maze.addToPhaser(self.phaser)
+
 
     self.player = new Player()
     var startPoint = self.maze.getStartPoint()
@@ -1552,7 +1553,7 @@ function Floor (x, y) {
       this.endPoint = phaser.add.sprite(this.sprite.x, this.sprite.y, 'endpoint')
     }
 
-    this.sprite.floor = this
+    this.sprite.cell = this
   }
 
   this.removeFromPhaser = function (phaser) {
@@ -1572,6 +1573,11 @@ function Wall (x, y) {
   this.openSouth = false
   this.openWest = false
 
+  this.addToPhaser = function (phaser) {
+    this.sprite = phaser.add.sprite((this.x * this.width), (this.y * this.height), this.getSpriteKey())
+    this.sprite.cell = this
+  }
+
   this.getSpriteKey = function () {
     var sprite_key = 'wall'
 
@@ -1588,6 +1594,7 @@ inherits(Wall, Cell)
 inherits(Floor, Cell)
 
 module.exports.Maze = Maze
+module.exports.Floor = Floor
 module.exports.Wall = Wall
 
 },{"util":5}],9:[function(require,module,exports){
@@ -1671,6 +1678,7 @@ module.exports = Minigame
 /* globals Phaser */
 var Wall = require('./mazes').Wall
 var EventEmitter = require('events').EventEmitter
+var Floor = require('./mazes').Floor
 var inherits = require('util').inherits
 
 // Represents a player in the game
@@ -1678,6 +1686,7 @@ function Player () {
   EventEmitter.call(this)
   var self = this
 
+  this.collidables = null
   this.sprite = null
   this.speed = 60
 
@@ -1695,18 +1704,23 @@ function Player () {
     this.emit('complete')
   }
 
-  this.collidedWithFloor = function (player, floorSprite) {
-    var floor = floorSprite.floor
-    if (floor.hasPetal) {
-      floor.hasPetal = false
-      floor.removeFromPhaser(this.phaser)
-      floor.addToPhaser(this.phaser)
-      self.sprite.bringToTop()
+  this.collidedWithCell = function (player, cellSprite) {
+    var cell = cellSprite.cell
+
+    if (cell instanceof Floor) {
+      if (cell.hasPetal) {
+        cell.hasPetal = false
+        cell.removeFromPhaser(this.phaser)
+        cell.addToPhaser(this.phaser)
+        self.sprite.bringToTop()
+      }
+
+      if (cell.hasEndPoint) self.end()
+
+      return false
+    } else {
+      return true
     }
-
-    if (floor.hasEndPoint) self.end()
-
-    return true
   }
 
   // Set up the physics for the player and walls
@@ -1715,12 +1729,16 @@ function Player () {
     phaser.physics.enable(this.sprite, Phaser.Physics.ARCADE)
     this.sprite.body.collideWorldBounds = true
 
+    this.collidables = phaser.add.group()
+    this.collidables.enableBody = true
+    this.collidables.physicsBodyType = Phaser.Physics.ARCADE
+
     // Now give every wall a physics
     for (var key in maze.cells) {
       var cell = maze.cells[key]
 
       if (cell instanceof Wall) {
-        phaser.physics.enable(cell.sprite, Phaser.Physics.ARCADE)
+        this.collidables.add(cell.sprite)
         cell.sprite.body.immovable = true
 
         // If the wall doesn't have an opening on the bottom, collide a little higher
@@ -1730,7 +1748,7 @@ function Player () {
       } else {
         // Collide with floors that have a petal, start point or end point
         if (cell.hasPetal || cell.hasStartPoint || cell.hasEndPoint) {
-          phaser.physics.enable(cell.sprite, Phaser.Physics.ARCADE)
+          this.collidables.add(cell.sprite)
           cell.sprite.body.immovable = true
           cell.sprite.body.setSize(8, 8, 1, 1)
         }
@@ -1739,16 +1757,7 @@ function Player () {
   }
 
   this.onUpdate = function (phaser, maze) {
-    for (var key in maze.cells) {
-      var cell = maze.cells[key]
-      if (cell instanceof Wall) {
-        phaser.physics.arcade.collide(this.sprite, cell.sprite)
-      } else {
-        if (cell.hasPetal || cell.hasStartPoint || cell.hasEndPoint) {
-          phaser.physics.arcade.overlap(this.sprite, cell.sprite, function () {}, this.collidedWithFloor, {sprite: this.sprite, phaser: phaser, maze: maze})
-        }
-      }
-    }
+    phaser.physics.arcade.collide(this.sprite, this.collidables, function () {}, this.collidedWithCell, {sprite: this.sprite, phaser: phaser, maze: maze})
   }
 
   this.onKey = function (keys) {

@@ -361,7 +361,7 @@ function Floor (x, y) {
       this.endPoint = phaser.add.sprite(this.sprite.x, this.sprite.y, 'endpoint')
     }
 
-    this.sprite.floor = this
+    this.sprite.cell = this
   }
 
   this.removeFromPhaser = function (phaser) {
@@ -381,6 +381,11 @@ function Wall (x, y) {
   this.openSouth = false
   this.openWest = false
 
+  this.addToPhaser = function (phaser) {
+    this.sprite = phaser.add.sprite((this.x * this.width), (this.y * this.height), this.getSpriteKey())
+    this.sprite.cell = this
+  }
+
   this.getSpriteKey = function () {
     var sprite_key = 'wall'
 
@@ -397,4 +402,5 @@ inherits(Wall, Cell)
 inherits(Floor, Cell)
 
 module.exports.Maze = Maze
+module.exports.Floor = Floor
 module.exports.Wall = Wall
