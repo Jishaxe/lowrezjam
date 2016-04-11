@@ -9,8 +9,8 @@ function Maze () {
   this.height = null
   this.cellWidth = 10
   this.cellHeight = 10
-  this.columns = 8
-  this.rows = 8
+  this.columns = 12
+  this.rows = 12
   this.selector = null
 
   // Removes this maze from phaser
@@ -87,10 +87,13 @@ function Maze () {
     this.height = this.rows * this.cellHeight
   }
 
-  this.blank = function () {
+  this.blank = function (rows, columns) {
+    this.rows = rows
+    this.columns = columns
+
     for (var x = 1; x <= this.columns; x++) {
       for (var y = 1; y <= this.rows; y++) {
-        this.cells[x + ',' + y] = new Floor(x, y)
+        this.cells[x + ',' + y] = new Wall(x, y)
       }
     }
 

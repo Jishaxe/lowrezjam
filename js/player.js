@@ -12,7 +12,7 @@ function Player () {
   this.speed = 60
 
   this.removeFromPhaser = function (phaser) {
-    this.sprite.destroy()  
+    this.sprite.destroy()
   }
 
   this.addToPhaser = function (phaser, x, y) {

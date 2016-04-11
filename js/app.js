@@ -2,6 +2,7 @@
 var $ = require('jquery')
 var Maze = require('./mazes').Maze
 var Player = require('./player')
+var MazeData = require('./mazedata')
 var Minigame = require('./minigame')
 
 window.app = new App('#game-container')
@@ -29,11 +30,10 @@ function App (gameContainer) {
     $('#container').css('opacity', 1)
   }
 
-
   this.playMaze = function (json) {
     var maze = new Maze()
-    maze.from(json)
-
+    maze.from(MazeData[1])
+    //maze.enableEditor()
     self.maze = maze
     self.phaser.world.setBounds(0, 0, maze.width, maze.height)
     self.maze.addToPhaser(self.phaser)
