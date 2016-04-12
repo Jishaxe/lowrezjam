@@ -16,6 +16,7 @@ function App (gameContainer) {
   this.phaser = null
   this.player = null
   this.maze = null
+  this.mazeIndex = 0
   this.minigame = null
 
   // Start game
@@ -31,8 +32,13 @@ function App (gameContainer) {
   }
 
   this.playMaze = function (json) {
+    if (self.minigame) {
+      this.minigame.removeFromPhaser(self.phaser)
+      this.minigame = null
+    }
+
     var maze = new Maze()
-    maze.from(MazeData[1])
+    maze.from(json)
     // maze.enableEditor()
     self.maze = maze
     self.phaser.world.setBounds(0, 0, 20000, 20000)
@@ -42,9 +48,7 @@ function App (gameContainer) {
     self.player.addToPhaser(self.phaser, startPoint.x, startPoint.y)
     self.player.setupPhysics(self.phaser, self.maze)
 
-    self.player.on('complete', function () {
-      self.playMinigame()
-    })
+    return self.player
   }
 
   this.playMinigame = function () {
@@ -60,6 +64,8 @@ function App (gameContainer) {
 
     self.minigame = new Minigame()
     self.minigame.addToPhaser(self.phaser)
+
+    return self.minigame
   }
 
   // Phaser create callback
@@ -74,7 +80,14 @@ function App (gameContainer) {
 
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
-    self.playMaze(test_map)
+    function next () {
+      self.playMaze(MazeData[self.mazeIndex]).once('complete', function () {
+        self.mazeIndex++
+        self.playMinigame().once('complete', next)
+      })
+    }
+
+    next()
   }
 
   // Phaser preload callback
