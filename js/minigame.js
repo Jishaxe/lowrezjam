@@ -1,12 +1,18 @@
 /* globals Phaser */
+var EventEmitter = require('events').EventEmitter
+var inherits = require('util').inherits
 
 // Represents the basket-catching minigame
 function Minigame () {
+  EventEmitter.call(this)
+
   this.player = null
   this.tinypetals = null
   this.explosion = null
   this.speed = 60
   this.swarm = 10
+  this.petalCount = 0
+  this.maxPetals = 10
 
   this.onKey = function (phaser, keys) {
     // Go left and flip
@@ -28,7 +34,11 @@ function Minigame () {
   }
 
   this.onUpdate = function (phaser) {
-    if (phaser.rnd.between(0, 40) === 20) {
+    if (this.petalCount >= this.maxPetals) {
+      this.emit('complete')
+    }
+
+    if (phaser.rnd.between(0, 40) === 20 && this.petalCount < this.maxPetals) {
       var petal = this.tinypetals.create(phaser.world.randomX, -10, 'tinypetal')
       petal.body.gravity.y = this.swarm
       petal.body.gravity.x = phaser.rnd.between(-this.swarm, this.swarm)
@@ -38,13 +48,17 @@ function Minigame () {
 
     var self = this
     this.tinypetals.forEach(function (petal) {
-      if (petal.y > 58) petal.destroy()
+      if (petal.y > 58) {
+        petal.destroy()
+        self.petalCount++
+      }
 
       if (petal.collected && phaser.rnd.between(0, 20) === 20) {
         self.explosion.x = petal.x
         self.explosion.y = petal.y
         self.explosion.start(true, 2000, null, 10)
         petal.destroy()
+        self.petalCount++
       }
     })
 
@@ -70,6 +84,13 @@ function Minigame () {
     this.explosion = phaser.add.emitter(0, 0, 100)
     this.explosion.makeParticles('pop')
   }
+
+  this.removeFromPhaser = function (phaser) {
+    this.player.destroy()
+    this.tinypetals.destroy()
+    this.explosion.destroy()
+  }
 }
 
+inherits(Minigame, EventEmitter)
 module.exports = Minigame
