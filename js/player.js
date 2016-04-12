@@ -11,7 +11,7 @@ function Player () {
   this.walls = null
   this.floors = null
   this.sprite = null
-  this.speed = 60
+  this.speed = 120
 
   this.removeFromPhaser = function (phaser) {
     this.sprite.destroy()
