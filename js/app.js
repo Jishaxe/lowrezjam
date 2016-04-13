@@ -4,6 +4,9 @@ var Maze = require('./mazes').Maze
 var Player = require('./player')
 var MazeData = require('./mazedata')
 var Minigame = require('./minigame')
+var StartScreen = require('./screens').StartScreen
+var IntroScreen = require('./screens').IntroScreen
+var EndScreen = require('./screens').EndScreen
 
 window.app = new App('#game-container')
 window.app.start()
@@ -18,6 +21,10 @@ function App (gameContainer) {
   this.maze = null
   this.mazeIndex = 0
   this.minigame = null
+
+  this.startScreen = null
+  this.introScreen = null
+  this.endScreen = null
 
   // Start game
   this.start = function () {
@@ -80,21 +87,57 @@ function App (gameContainer) {
 
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
-    function next () {
-      self.playMaze(MazeData[self.mazeIndex]).once('complete', function () {
-        self.mazeIndex++
-        self.playMinigame().once('complete', next)
-      })
+
+    self.startScreen = new StartScreen()
+    self.startScreen.addToPhaser(self.phaser)
+
+    self.startScreen.once('complete', openIntroScreen)
+
+    function openIntroScreen () {
+      self.startScreen.removeFromPhaser(self.phaser)
+      self.startScreen = null
+      self.introScreen = new IntroScreen()
+      self.introScreen.addToPhaser(self.phaser)
+      self.introScreen.once('complete', openMazes)
     }
 
-    next()
+    function openMazes () {
+      function next () {
+        if (self.mazeIndex < MazeData.length) {
+          self.playMaze(MazeData[self.mazeIndex]).once('complete', function () {
+            self.mazeIndex++
+            self.playMinigame().once('complete', next)
+          })
+        } else {
+          this.minigame.removeFromPhaser(self.phaser)
+          this.minigame = null
+          openEndScreen()
+        }
+      }
+
+      next()
+    }
+
+    function openEndScreen () {
+      self.endScreen = new EndScreen()
+      self.endScreen.addToPhaser(self.phaser)
+      self.endScreen.once('complete', function () {
+        self.endScreen.removeFromPhaser(self.phaser)
+        self.endScreen = null
+
+        self.startScreen = new StartScreen()
+        self.startScreen.addToPhaser(self.phaser)
+
+        self.startScreen.once('complete', openIntroScreen)
+      })
+    }
   }
 
   // Phaser preload callback
   // Set up scaling and cache all the sprites
   this.onPreload = function () {
     self.phaser.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT
-    self.phaser.load.bitmapFont('pixel', 'fonts/font.png', 'fonts/font.fnt')
+    self.phaser.load.bitmapFont('pixel', 'font/font.png', 'font/font.fnt')
 
     var img = function (key) {
       self.phaser.load.image(key, '/img/' + key + '.png')
@@ -158,6 +201,10 @@ function App (gameContainer) {
       self.minigame.onKey(self.phaser, self.cursors)
       self.minigame.onUpdate(self.phaser)
     }
+
+    if (self.startScreen) self.startScreen.onKey(self.phaser, self.cursors)
+    if (self.introScreen) self.introScreen.onKey(self.phaser, self.cursors)
+    if (self.endScreen) self.endScreen.onKey(self.phaser, self.cursors)
   }
 
   this.onInit = function () {
