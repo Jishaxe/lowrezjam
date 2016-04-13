@@ -94,6 +94,7 @@ function App (gameContainer) {
   // Set up scaling and cache all the sprites
   this.onPreload = function () {
     self.phaser.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT
+    self.phaser.load.bitmapFont('pixel', 'fonts/font.png', 'fonts/font.fnt')
 
     var img = function (key) {
       self.phaser.load.image(key, '/img/' + key + '.png')
