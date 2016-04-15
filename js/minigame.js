@@ -7,6 +7,7 @@ function Minigame () {
   EventEmitter.call(this)
 
   this.player = null
+  this.background = null
   this.tinypetals = null
   this.explosion = null
   this.speed = 60
@@ -69,7 +70,8 @@ function Minigame () {
 
   this.addToPhaser = function (phaser) {
     phaser.world.setBounds(0, -10, 64, 74)
-    this.player = phaser.add.sprite(phaser.rnd.between(10, 50), phaser.world.centerY, 'player')
+    this.background = phaser.add.sprite(0, 0, 'minigame')
+    this.player = phaser.add.sprite(phaser.rnd.between(10, 50), phaser.world.centerY, 'player_idle')
     this.player.anchor.setTo(0.5, 1)
     phaser.physics.enable(this.player, Phaser.Physics.ARCADE)
 

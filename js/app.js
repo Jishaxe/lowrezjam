@@ -80,6 +80,7 @@ function App (gameContainer) {
 
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
+    /*
     function next () {
       self.playMaze(MazeData[self.mazeIndex]).once('complete', function () {
         self.mazeIndex++
@@ -87,7 +88,9 @@ function App (gameContainer) {
       })
     }
 
-    next()
+    next()*/
+
+    self.playMinigame()
   }
 
   // Phaser preload callback
@@ -110,6 +113,7 @@ function App (gameContainer) {
     self.phaser.load.spritesheet('player_right', 'img/player/right.png', 14, 16)
 
     img('pop')
+    img('minigame')
     img('startpoint')
     img('endpoint')
     img('tinypetal')
