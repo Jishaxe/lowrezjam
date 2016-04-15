@@ -11,6 +11,10 @@ function IntroScreen () {
   this.removeFromPhaser = function (phaser) {
 
   }
+
+  this.onKey = function (phaser, keys) {
+    if (keys.space.isDown) this.emit('complete')
+  }
 }
 
 inherits(IntroScreen, EventEmitter)

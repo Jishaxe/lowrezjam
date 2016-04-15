@@ -13,7 +13,7 @@ function Minigame () {
   this.speed = 60
   this.swarm = 10
   this.petalCount = 0
-  this.maxPetals = 100
+  this.maxPetals = 10
 
   this.lastDirection = 'idle'
   this.onKey = function (phaser, keys) {

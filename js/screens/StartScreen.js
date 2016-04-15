@@ -13,7 +13,7 @@ function StartScreen () {
   }
 
   this.onKey = function (phaser, keys) {
-
+    this.emit('complete')
   }
 }
 

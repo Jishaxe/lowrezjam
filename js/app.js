@@ -103,7 +103,7 @@ function App (gameContainer) {
 
     function openMazes () {
       function next () {
-        if (self.mazeIndex < MazeData.length) {
+        if (self.mazeIndex <= MazeData.length) {
           self.playMaze(MazeData[self.mazeIndex]).once('complete', function () {
             self.mazeIndex++
             self.playMinigame().once('complete', next)
