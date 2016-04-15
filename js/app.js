@@ -147,8 +147,14 @@ function App (gameContainer) {
       self.phaser.load.spritesheet(key, '/img/' + key + '.png', 20, 20)
     }
 
+    self.phaser.load.spritesheet('player_idle', 'img/player/idle.png', 14, 16)
+    self.phaser.load.spritesheet('player_up', 'img/player/up.png', 14, 16)
+    self.phaser.load.spritesheet('player_down', 'img/player/down.png', 14, 16)
+    self.phaser.load.spritesheet('player_left', 'img/player/left.png', 14, 16)
+    self.phaser.load.spritesheet('player_right', 'img/player/right.png', 14, 16)
+
     img('pop')
-    img('player')
+    img('minigame')
     img('startpoint')
     img('endpoint')
     img('tinypetal')
