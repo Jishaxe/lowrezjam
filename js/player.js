@@ -11,7 +11,7 @@ function Player () {
   this.walls = null
   this.floors = null
   this.sprite = null
-  this.speed = 120
+  this.speed = 60
 
   this.removeFromPhaser = function (phaser) {
     this.sprite.destroy()
@@ -19,7 +19,8 @@ function Player () {
 
   this.addToPhaser = function (phaser, x, y) {
     // 6 x 8
-    this.sprite = phaser.add.sprite(x, y, 'player')
+    this.sprite = phaser.add.sprite(x, y, 'player_idle')
+    this.sprite.animations.add('walk', [1, 2, 3, 4])
     phaser.camera.follow(this.sprite, Phaser.Camera.FOLLOW_TOPDOWN)
   }
 
@@ -32,6 +33,7 @@ function Player () {
     // First give the player a physics
     phaser.physics.enable(this.sprite, Phaser.Physics.ARCADE)
     this.sprite.body.collideWorldBounds = true
+    // self.sprite.body.setSize(3, 0, 8, 16)
 
     this.walls = phaser.add.group()
     this.walls.enableBody = true
@@ -85,13 +87,54 @@ function Player () {
     })
   }
 
+  this.lastDirection = 'idle'
+
   this.onKey = function (keys) {
     this.sprite.body.velocity.set(0, 0)
 
-    if (keys.up.isDown) this.sprite.body.velocity.y = -this.speed
-    if (keys.down.isDown) this.sprite.body.velocity.y = this.speed
-    if (keys.right.isDown) this.sprite.body.velocity.x = this.speed
-    if (keys.left.isDown) this.sprite.body.velocity.x = -this.speed
+    if (keys.up.isDown) {
+      this.sprite.body.velocity.y = -this.speed
+      if (this.lastDirection !== 'up' && (!keys.left.isDown && !keys.right.isDown)) {
+        this.lastDirection = 'up'
+        this.sprite.loadTexture('player_up')
+        this.sprite.animations.play('walk', 8, true)
+      }
+    }
+
+    if (keys.down.isDown) {
+      this.sprite.body.velocity.y = this.speed
+      if (this.lastDirection !== 'down' && (!keys.left.isDown && !keys.right.isDown)) {
+        this.lastDirection = 'down'
+        this.sprite.loadTexture('player_down')
+        this.sprite.animations.play('walk', 8, true)
+      }
+    }
+
+    if (keys.right.isDown) {
+      this.sprite.body.velocity.x = this.speed
+      if (this.lastDirection !== 'right') {
+        this.lastDirection = 'right'
+        this.sprite.loadTexture('player_right')
+        this.sprite.animations.play('walk', 8, true)
+      }
+    }
+
+    if (keys.left.isDown) {
+      this.sprite.body.velocity.x = -this.speed
+      if (this.lastDirection !== 'left') {
+        this.lastDirection = 'left'
+        this.sprite.loadTexture('player_left')
+        this.sprite.animations.play('walk', 8, true)
+      }
+    }
+
+    if (this.sprite.body.velocity.x === 0 && this.sprite.body.velocity.y === 0) {
+      if (this.lastDirection !== 'idle') {
+        this.lastDirection = 'idle'
+        this.sprite.loadTexture('player_idle')
+        this.sprite.animations.play('walk', 4, true)
+      }
+    }
   }
 }
 
