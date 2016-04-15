@@ -153,6 +153,7 @@ function App (gameContainer) {
     self.phaser.load.spritesheet('player_left', 'img/player/left.png', 14, 16)
     self.phaser.load.spritesheet('player_right', 'img/player/right.png', 14, 16)
 
+    img('talkinghana_happy')
     img('pop')
     img('minigame')
     img('startpoint')
