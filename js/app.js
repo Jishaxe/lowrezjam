@@ -159,6 +159,8 @@ function App (gameContainer) {
 
     img('bubble')
     img('space')
+    img('talkinghana_good')
+    img('talkinghana_bad')
     img('talkinghana_happy')
     img('talkinghana_amazing')
     img('pop')
