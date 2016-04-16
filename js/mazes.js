@@ -356,11 +356,15 @@ function Floor (x, y) {
 
     if (this.hasStartPoint) {
       this.startPoint = phaser.add.sprite(this.sprite.x, this.sprite.y, 'startpoint')
+      this.startPoint.animations.add('flash')
+      this.startPoint.animations.play('flash', 4, true)
       this.startPoint.bringToTop()
     }
 
     if (this.hasEndPoint) {
       this.endPoint = phaser.add.sprite(this.sprite.x, this.sprite.y, 'endpoint')
+      this.endPoint.animations.add('dance')
+      this.endPoint.animations.play('dance', 6, true)
       this.endPoint.bringToTop()
     }
 
@@ -386,6 +390,10 @@ function Wall (x, y) {
 
   this.addToPhaser = function (phaser) {
     this.sprite = phaser.add.sprite((this.x * this.width), (this.y * this.height), this.getSpriteKey())
+    if (phaser.rnd.between(0, 2) === 0) {
+      this.sprite.animations.add('sparkle')
+      this.sprite.animations.play('sparkle', 10, true)
+    }
     this.sprite.cell = this
   }
 
