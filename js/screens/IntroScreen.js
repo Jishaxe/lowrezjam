@@ -23,7 +23,6 @@ function IntroScreen () {
 
   this.onKey = function (phaser, keys) {
     if (this.hana) this.hana.onKey(phaser, keys)
-    if (keys.space.isDown) this.emit('complete')
   }
 }
 
