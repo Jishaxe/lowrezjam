@@ -3,7 +3,7 @@ var EventEmitter = require('events').EventEmitter
 var inherits = require('util').inherits
 
 // Represents the basket-catching minigame
-function Minigame () {
+function Minigame (amount) {
   EventEmitter.call(this)
 
   this.player = null
@@ -13,7 +13,7 @@ function Minigame () {
   this.speed = 60
   this.swarm = 10
   this.petalCount = 0
-  this.maxPetals = 10
+  this.maxPetals = amount
 
   this.lastDirection = 'idle'
   this.onKey = function (phaser, keys) {
@@ -43,33 +43,32 @@ function Minigame () {
   }
 
   this.onUpdate = function (phaser) {
-    if (this.petalCount >= this.maxPetals) {
-      this.emit('complete')
-    }
-
     if (phaser.rnd.between(0, 40) === 20 && this.petalCount < this.maxPetals) {
       var petal = this.tinypetals.create(phaser.world.randomX, -10, 'tinypetal')
       petal.body.gravity.y = this.swarm
       petal.body.gravity.x = phaser.rnd.between(-this.swarm, this.swarm)
       petal.body.collideWorldBounds = true
       petal.body.bounce.set(0.8)
+      this.petalCount++
     }
 
     var self = this
     this.tinypetals.forEach(function (petal) {
       if (petal.y > 58) {
+        petal.destroyed = true
         petal.destroy()
-        self.petalCount++
       }
 
       if (petal.collected && phaser.rnd.between(0, 20) === 20) {
         self.explosion.x = petal.x
         self.explosion.y = petal.y
         self.explosion.start(true, 2000, null, 10)
+        petal.destroyed = true
         petal.destroy()
-        self.petalCount++
       }
     })
+
+    if (this.tinypetals.length === 0 && this.petalCount >= this.maxPetals) this.emit('complete')
 
     phaser.physics.arcade.collide(this.player, this.tinypetals, function (plr, petal) {
       petal.collected = true

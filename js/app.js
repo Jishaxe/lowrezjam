@@ -58,7 +58,7 @@ function App (gameContainer) {
     return self.player
   }
 
-  this.playMinigame = function () {
+  this.playMinigame = function (amount) {
     if (this.maze) {
       this.maze.removeFromPhaser(self.phaser)
       this.maze = null
@@ -69,7 +69,7 @@ function App (gameContainer) {
       this.player = null
     }
 
-    self.minigame = new Minigame()
+    self.minigame = new Minigame(amount)
     self.minigame.addToPhaser(self.phaser)
 
     return self.minigame
@@ -120,7 +120,7 @@ function App (gameContainer) {
 
             MazeData.savePetals(petal_cells, MazeData.data[self.mazeIndex])
 
-            self.playMinigame().once('complete', next)
+            self.playMinigame(5).once('complete', next)
           })
         } else {
           this.minigame.removeFromPhaser(self.phaser)
