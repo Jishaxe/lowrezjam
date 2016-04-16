@@ -98,7 +98,11 @@ function App (gameContainer) {
       self.startScreen = null
       self.introScreen = new IntroScreen()
       self.introScreen.addToPhaser(self.phaser)
-      self.introScreen.once('complete', openMazes)
+      self.introScreen.once('complete', function () {
+        self.introScreen.removeFromPhaser(self.phaser)
+        self.introScreen = null
+        openMazes()
+      })
     }
 
     function openMazes () {

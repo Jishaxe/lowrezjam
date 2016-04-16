@@ -19,6 +19,7 @@ function IntroScreen () {
 
   this.removeFromPhaser = function (phaser) {
     this.hana.removeFromPhaser(phaser)
+    this.hana = null
   }
 
   this.onKey = function (phaser, keys) {
