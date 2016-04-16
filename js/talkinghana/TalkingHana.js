@@ -3,21 +3,16 @@
 var EventEmitter = require('events').EventEmitter
 var inherits = require('util').inherits
 
-function TalkingHana () {
+function TalkingHana (story) {
   this.sprite = null
   this.bubble = null
   this.space_to_continue = null
   this.speed = 80
   this.text = null
   this.charSize = 8
+  story.push({text: '...', emotion: 'done'})
 
-  this.story = [{
-    text: 'HAPPY HAPPY HAPPY HAPPY',
-    emotion: 'happy'
-  }, {
-    text: 'done',
-    emotion: 'done'
-  }]
+  this.story = story
 
   this.addToPhaser = function (phaser) {
     phaser.world.setBounds(0, 0, 64, 64)

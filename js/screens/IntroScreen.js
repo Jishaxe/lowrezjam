@@ -2,12 +2,13 @@ var inherits = require('util').inherits
 var TalkingHana = require('../talkinghana')
 var EventEmitter = require('events').EventEmitter
 
-function IntroScreen () {
+function IntroScreen (story) {
   EventEmitter.call(this)
   this.hana = null
+  this.story = story
 
   this.addToPhaser = function (phaser) {
-    this.hana = new TalkingHana()
+    this.hana = new TalkingHana(story)
     this.hana.addToPhaser(phaser)
 
     var self = this

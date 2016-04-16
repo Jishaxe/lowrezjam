@@ -15,6 +15,7 @@ window.app.start()
 // Main app class
 function App (gameContainer) {
   var self = this
+  this.introScreenViewed = false
   this.gameContainer = gameContainer
   this.cursors = null
   this.phaser = null
@@ -22,6 +23,7 @@ function App (gameContainer) {
   this.maze = null
   this.mazeIndex = 0
   this.minigame = null
+  this.story = [{text: 'welcome to stuff', emotion: 'happy'}]
 
   this.startScreen = null
   this.introScreen = null
@@ -85,19 +87,39 @@ function App (gameContainer) {
     self.cursors.one = self.phaser.input.keyboard.addKey(Phaser.KeyCode.ONE)
     self.cursors.two = self.phaser.input.keyboard.addKey(Phaser.KeyCode.TWO)
     self.cursors.three = self.phaser.input.keyboard.addKey(Phaser.KeyCode.THREE)
-
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
 
-    self.startScreen = new StartScreen()
-    self.startScreen.addToPhaser(self.phaser)
+    openStartScreen()
 
-    self.startScreen.once('complete', openIntroScreen)
+    function openStartScreen () {
+      self.startScreen = new StartScreen()
+      self.startScreen.addToPhaser(self.phaser)
+
+      self.startScreen.once('complete', openIntroScreen)
+    }
 
     function openIntroScreen () {
-      self.startScreen.removeFromPhaser(self.phaser)
-      self.startScreen = null
-      self.introScreen = new IntroScreen()
+      if (self.endScreen) {
+        self.endScreen.removeFromPhaser(self.phaser)
+        self.endScreen = null
+      }
+      
+      if (self.startScreen) {
+        self.startScreen.removeFromPhaser(self.phaser)
+        self.startScreen = null
+      }
+
+      var story = []
+
+      if (!self.introScreenViewed) {
+        story = self.story
+        self.introScreenViewed = true
+      } else {
+        story.push({text: 'Now let\'s continue with this!', emotion: 'happy'})
+      }
+
+      self.introScreen = new IntroScreen(story)
       self.introScreen.addToPhaser(self.phaser)
       self.introScreen.once('complete', function () {
         self.introScreen.removeFromPhaser(self.phaser)
@@ -107,46 +129,33 @@ function App (gameContainer) {
     }
 
     function openMazes () {
-      function next () {
-        if (self.mazeIndex <= MazeData.data.length) {
-          self.playMaze(MazeData.data[0]).once('complete', function () {
-            var petal_cells = []
-            for (var key in self.maze.cells) {
-              var cell = self.maze.cells[key]
-              if (cell instanceof Floor && cell.hasPetal) petal_cells.push(cell)
-            }
-
-            MazeData.savePetals(petal_cells, MazeData.data[self.mazeIndex])
-
-            var petalsForMinigame = MazeData.data[self.mazeIndex].petalsForMinigame
-            if (petalsForMinigame === undefined) petalsForMinigame = 10
-            self.playMinigame(petalsForMinigame).once('complete', function (petalsCollected) {
-              MazeData.data[self.mazeIndex].petalsForMinigame = (petalsForMinigame - petalsCollected)
-              next()
-            })
-          })
-        } else {
-          this.minigame.removeFromPhaser(self.phaser)
-          this.minigame = null
-          openEndScreen()
+      self.playMaze(MazeData.data[0]).once('complete', function () {
+        var petal_cells = []
+        for (var key in self.maze.cells) {
+          var cell = self.maze.cells[key]
+          if (cell instanceof Floor && cell.hasPetal) petal_cells.push(cell)
         }
-      }
 
-      next()
+        MazeData.savePetals(petal_cells, MazeData.data[self.mazeIndex])
+
+        var petalsForMinigame = MazeData.data[self.mazeIndex].petalsForMinigame
+        if (petalsForMinigame === undefined) petalsForMinigame = 10
+        self.playMinigame(petalsForMinigame).once('complete', function (petalsCollected) {
+          MazeData.data[self.mazeIndex].petalsForMinigame = (petalsForMinigame - petalsCollected)
+          openEndScreen()
+        })
+      })
     }
 
-    function openEndScreen () {
-      self.endScreen = new EndScreen()
+    function openEndScreen (collected, total) {
+      if (self.minigame) {
+        self.minigame.removeFromPhaser(self.phaser)
+        self.minigame = null
+      }
+
+      self.endScreen = new EndScreen(5, 10)
       self.endScreen.addToPhaser(self.phaser)
-      self.endScreen.once('complete', function () {
-        self.endScreen.removeFromPhaser(self.phaser)
-        self.endScreen = null
-
-        self.startScreen = new StartScreen()
-        self.startScreen.addToPhaser(self.phaser)
-
-        self.startScreen.once('complete', openIntroScreen)
-      })
+      self.endScreen.once('complete', openIntroScreen)
     }
   }
 
