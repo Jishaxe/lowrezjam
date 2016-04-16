@@ -1,6 +1,7 @@
 /* globals Phaser */
 var $ = require('jquery')
 var Maze = require('./mazes').Maze
+var Floor = require('./mazes').Floor
 var Player = require('./player')
 var MazeData = require('./mazedata')
 var Minigame = require('./minigame')
@@ -107,9 +108,18 @@ function App (gameContainer) {
 
     function openMazes () {
       function next () {
-        if (self.mazeIndex <= MazeData.length) {
-          self.playMaze(MazeData[self.mazeIndex]).once('complete', function () {
-            self.mazeIndex++
+        if (self.mazeIndex <= MazeData.data.length) {
+          self.playMaze(MazeData.data[0]).once('complete', function () {
+            // self.mazeIndex++
+
+            var petal_cells = []
+            for (var key in self.maze.cells) {
+              var cell = self.maze.cells[key]
+              if (cell instanceof Floor && cell.hasPetal) petal_cells.push(cell)
+            }
+
+            MazeData.savePetals(petal_cells, MazeData.data[self.mazeIndex])
+
             self.playMinigame().once('complete', next)
           })
         } else {
