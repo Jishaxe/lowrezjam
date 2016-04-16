@@ -10,6 +10,7 @@ function Minigame (amount) {
   this.background = null
   this.tinypetals = null
   this.explosion = null
+  this.petalsCollected = 0
   this.speed = 60
   this.swarm = 10
   this.petalCount = 0
@@ -54,7 +55,7 @@ function Minigame (amount) {
 
     var self = this
     this.tinypetals.forEach(function (petal) {
-      if (petal.y > 58) {
+      if (petal.y > 58 && !petal.collected) {
         petal.destroyed = true
         petal.destroy()
       }
@@ -65,10 +66,11 @@ function Minigame (amount) {
         self.explosion.start(true, 2000, null, 10)
         petal.destroyed = true
         petal.destroy()
+        self.petalsCollected++
       }
     })
 
-    if (this.tinypetals.length === 0 && this.petalCount >= this.maxPetals) this.emit('complete')
+    if (this.tinypetals.length === 0 && this.petalCount >= this.maxPetals) this.emit('complete', this.petalsCollected)
 
     phaser.physics.arcade.collide(this.player, this.tinypetals, function (plr, petal) {
       petal.collected = true

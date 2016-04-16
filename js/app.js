@@ -110,8 +110,6 @@ function App (gameContainer) {
       function next () {
         if (self.mazeIndex <= MazeData.data.length) {
           self.playMaze(MazeData.data[0]).once('complete', function () {
-            // self.mazeIndex++
-
             var petal_cells = []
             for (var key in self.maze.cells) {
               var cell = self.maze.cells[key]
@@ -120,7 +118,12 @@ function App (gameContainer) {
 
             MazeData.savePetals(petal_cells, MazeData.data[self.mazeIndex])
 
-            self.playMinigame(5).once('complete', next)
+            var petalsForMinigame = MazeData.data[self.mazeIndex].petalsForMinigame
+            if (petalsForMinigame === undefined) petalsForMinigame = 10
+            self.playMinigame(petalsForMinigame).once('complete', function (petalsCollected) {
+              MazeData.data[self.mazeIndex].petalsForMinigame = (petalsForMinigame - petalsCollected)
+              next()
+            })
           })
         } else {
           this.minigame.removeFromPhaser(self.phaser)
