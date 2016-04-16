@@ -5,6 +5,7 @@ var inherits = require('util').inherits
 // Represents a maze
 function Maze () {
   this.cells = {}
+  this.background = []
   this.width = null
   this.height = null
   this.cellWidth = 10
@@ -18,6 +19,10 @@ function Maze () {
     for (var key in this.cells) {
       this.cells[key].removeFromPhaser(phaser)
     }
+
+    this.background.forEach(function (bkg) {
+      bkg.destroy()
+    })
 
     if (this.selector) this.selector.removeFromPhaser(phaser)
   }
@@ -107,6 +112,20 @@ function Maze () {
 
   // Add this maze to phaser
   this.addToPhaser = function (phaser) {
+    phaser.world.setBounds(0, 0, 5000, 5000)
+    // Add background
+    var bkr = phaser.add.sprite(0, 0, 'background')
+    var width = bkr.width
+    var height = bkr.height
+    bkr.destroy()
+
+    for (var x = 0; x < (5000 / width); x += width) {
+      for (var y = 0; y < (5000 / height); y += height) {
+        var spr = phaser.add.sprite(x, y, 'background')
+        this.background.push(spr)
+      }
+    }
+
     for (var key in this.cells) {
       var cell = this.cells[key]
       cell.addToPhaser(phaser)
@@ -387,9 +406,12 @@ function Wall (x, y) {
   this.openEast = false
   this.openSouth = false
   this.openWest = false
+  this.floor = null
 
   this.addToPhaser = function (phaser) {
     this.sprite = phaser.add.sprite((this.x * this.width), (this.y * this.height), this.getSpriteKey())
+    this.floor = phaser.add.sprite(this.sprite.x, this.sprite.y, 'floor')
+
     if (phaser.rnd.between(0, 2) === 0) {
       this.sprite.animations.add('sparkle')
       this.sprite.animations.play('sparkle', 10, true)
@@ -406,6 +428,11 @@ function Wall (x, y) {
     if (this.openWest) sprite_key += 'W'
 
     return sprite_key
+  }
+
+  this.removeFromPhaser = function (phaser) {
+    this.sprite.destroy()
+    this.floor.destroy()
   }
 }
 

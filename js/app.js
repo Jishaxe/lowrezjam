@@ -48,7 +48,6 @@ function App (gameContainer) {
     maze.from(json)
     // maze.enableEditor()
     self.maze = maze
-    self.phaser.world.setBounds(0, 0, 20000, 20000)
     self.maze.addToPhaser(self.phaser)
     self.player = new Player()
     var startPoint = self.maze.getStartPoint()
@@ -158,6 +157,7 @@ function App (gameContainer) {
     self.phaser.load.spritesheet('player_left', 'img/player/left.png', 14, 16)
     self.phaser.load.spritesheet('player_right', 'img/player/right.png', 14, 16)
 
+    img('background')
     img('button')
     img('button_selected')
     img('bubble')
