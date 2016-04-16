@@ -81,6 +81,7 @@ function App (gameContainer) {
     // Grab the arrow keys
     self.cursors = self.phaser.input.keyboard.createCursorKeys()
     self.cursors.space = self.phaser.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR)
+    self.cursors.enter = self.phaser.input.keyboard.addKey(Phaser.Keyboard.ENTER)
     self.cursors.one = self.phaser.input.keyboard.addKey(Phaser.KeyCode.ONE)
     self.cursors.two = self.phaser.input.keyboard.addKey(Phaser.KeyCode.TWO)
     self.cursors.three = self.phaser.input.keyboard.addKey(Phaser.KeyCode.THREE)
@@ -157,6 +158,8 @@ function App (gameContainer) {
     self.phaser.load.spritesheet('player_left', 'img/player/left.png', 14, 16)
     self.phaser.load.spritesheet('player_right', 'img/player/right.png', 14, 16)
 
+    img('button')
+    img('button_selected')
     img('bubble')
     img('space')
     img('talkinghana_good')
