@@ -1042,11 +1042,11 @@ function App (gameContainer) {
   this.story = [
     {text: 'Hello there!',
     emotion: 'good'},{
-    text: '             ',
+    text: '                 ',
     emotion: 'happy'},
     {text: 'It\'s finally spring time and all the cherry blossoms are in bloom, ready for the festivals!',
     emotion: 'good'},{
-    text: '             ',
+    text: '                ',
     emotion: 'happy'},{
     text: 'However               ',
     emotion: 'good'},
@@ -1066,11 +1066,6 @@ function App (gameContainer) {
 
     this.story.push({text: '...........', emotion: 'amazing'})
     this.story.push({text: '...........', emotion: 'amazing'})
-    this.story.push({text: '...........', emotion: 'amazing'})
-    this.story.push({text: '...........', emotion: 'amazing'})
-    this.story.push({text: '...........', emotion: 'amazing'})
-    this.story.push({text: '...........', emotion: 'amazing'})
-
   this.startScreen = null
   this.introScreen = null
   this.endScreen = null
