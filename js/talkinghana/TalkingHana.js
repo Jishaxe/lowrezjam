@@ -10,7 +10,13 @@ function TalkingHana (story) {
   this.speed = 80
   this.text = null
   this.charSize = 8
-  story.push({text: '...', emotion: 'done'})
+  story.push({text: '...........', emotion: 'amazing'})
+  story.push({text: '...........', emotion: 'amazing'})
+  story.push({text: '...........', emotion: 'amazing'})
+  story.push({text: '...........', emotion: 'amazing'})
+  story.push({text: '...........', emotion: 'amazing'})
+  story.push({text: '...........', emotion: 'amazing'})
+  story.push({text: '...........', emotion: 'done'})
 
   this.story = story
 

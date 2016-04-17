@@ -23,7 +23,24 @@ function App (gameContainer) {
   this.maze = null
   this.mazeIndex = 0
   this.minigame = null
-  this.story = [{text: 'welcome to stuff', emotion: 'happy'}]
+  this.story = [
+    {text: 'Hello there!',
+    emotion: 'happy'},
+    {text: 'It\'s finally spring time and all',
+    emotion: 'good'},
+    {text: 'the cherry blossoms are in bloom, ready for the festivals!',
+    emotion: 'happy'},{
+    text: 'However  ',
+    emotion: 'good'},
+    {text: 'These pesky ghosts have been littering the prefectures with the cherry blossom petals!',
+    emotion: 'bad'},
+    {text: 'I\'m in charge of cleaning duties for the 5 prefectures',
+    emotion: 'good'},{
+    text: 'Perhaps you can help me?',
+    emotion: 'happy'},{
+      text: 'Lets start!',
+      emotion: 'amazing'
+    }]
 
   this.startScreen = null
   this.introScreen = null
