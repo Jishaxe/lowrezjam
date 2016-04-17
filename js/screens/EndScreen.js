@@ -16,6 +16,10 @@ function EndScreen (collected, total, ended) {
 
   this.addToPhaser = function (phaser) {
     var perc = (this.collected / this.total) * 100
+    if (perc !== 100 && this.ended) {
+      this.ended = false
+    }
+    
     var txt = 'bad'
     var emotion = 'bad'
     var ghost = 'endpoint'

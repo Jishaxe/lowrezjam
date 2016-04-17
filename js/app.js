@@ -42,6 +42,11 @@ function App (gameContainer) {
   }
 
   this.playMaze = function (json) {
+    if (!json.dirty) {
+      json.dirty = true
+      MazeData.calculateMaxPetals(json)
+    }
+
     if (self.minigame) {
       this.minigame.removeFromPhaser(self.phaser)
       this.minigame = null
@@ -132,14 +137,18 @@ function App (gameContainer) {
       var has_petals_left = []
 
       MazeData.data.forEach(function (mazeData, i) {
-        if (MazeData.getPetals(mazeData).petals > 0) has_petals_left.push(i)
+        if (MazeData.getPetals(mazeData).petals > 0) {
+          has_petals_left.push(i)
+        }
       })
 
-      return {i: self.phaser.rnd.between(0, has_petals_left.length - 1), last: has_petals_left.length === 1}
+      return {i: self.phaser.rnd.pick(has_petals_left), last: has_petals_left.length === 1}
     }
 
     function openMazes () {
-      self.mazeIndex = chooseMaze().i
+      var chosenMaze = chooseMaze()
+      self.mazeIndex = chosenMaze.i
+      var isLast = chosenMaze.last
 
       self.playMaze(MazeData.data[self.mazeIndex]).once('complete', function () {
         var petal_cells = []
@@ -154,7 +163,14 @@ function App (gameContainer) {
         if (petalsForMinigame === undefined) petalsForMinigame = 10
         self.playMinigame(petalsForMinigame).once('complete', function (petalsCollected) {
           MazeData.data[self.mazeIndex].petalsForMinigame = (petalsForMinigame - petalsCollected)
-          openEndScreen(MazeData.getPetals(MazeData.data[self.mazeIndex]).petals, MazeData.getPetals(MazeData.data[self.mazeIndex]).maxPetals)
+          var maxPetals = MazeData.getPetals(MazeData.data[self.mazeIndex]).maxPetals
+          var petalsLeft = MazeData.getPetals(MazeData.data[self.mazeIndex]).petals
+
+          var totalMinigamePetalsCollected = 10 - (petalsForMinigame - petalsCollected)
+          var collected = (maxPetals - petalsLeft) + totalMinigamePetalsCollected
+          maxPetals += 10
+
+          openEndScreen(collected, maxPetals, isLast)
         })
       })
     }
@@ -165,7 +181,7 @@ function App (gameContainer) {
         self.minigame = null
       }
 
-      self.endScreen = new EndScreen(5, 10)
+      self.endScreen = new EndScreen(collected, total)
       self.endScreen.addToPhaser(self.phaser)
       self.endScreen.once('complete', openIntroScreen)
     }

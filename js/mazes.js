@@ -115,15 +115,15 @@ function Maze () {
 
   // Add this maze to phaser
   this.addToPhaser = function (phaser) {
-    phaser.world.setBounds(0, 0, 5000, 5000)
+    phaser.world.setBounds(0, 0, 1000, 1000)
     // Add background
     var bkr = phaser.add.sprite(0, 0, 'background')
     var width = bkr.width
     var height = bkr.height
     bkr.destroy()
 
-    for (var x = 0; x < (5000 / width); x += width) {
-      for (var y = 0; y < (5000 / height); y += height) {
+    for (var x = 0; x < 1000; x += width) {
+      for (var y = 0; y < 1000; y += height) {
         var spr = phaser.add.sprite(x, y, 'background')
         this.background.push(spr)
       }

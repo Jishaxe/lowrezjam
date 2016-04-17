@@ -31,10 +31,13 @@ module.exports.calculateMaxPetals = function (maze) {
   for (var key in maze.cells) {
     var cell = maze.cells[key]
     if (cell.type === 'Floor') {
-      if (cell.hasPetal) petals++
+      if (cell.hasPetal === true) {
+        petals++
+      }
     }
   }
 
+  alert('Max petals is ' + petals)
   maze.maxPetals = petals
 }
 
