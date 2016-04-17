@@ -128,8 +128,20 @@ function App (gameContainer) {
       })
     }
 
+    function chooseMaze() {
+      var has_petals_left = []
+
+      MazeData.data.forEach(function (mazeData, i) {
+        if (MazeData.getPetals(mazeData).petals > 0) has_petals_left.push(i)
+      })
+
+      return {i: self.phaser.rnd.between(0, has_petals_left.length - 1), last: has_petals_left.length === 1}
+    }
+
     function openMazes () {
-      self.playMaze(MazeData.data[0]).once('complete', function () {
+      self.mazeIndex = chooseMaze().i
+
+      self.playMaze(MazeData.data[self.mazeIndex]).once('complete', function () {
         var petal_cells = []
         for (var key in self.maze.cells) {
           var cell = self.maze.cells[key]
@@ -142,7 +154,7 @@ function App (gameContainer) {
         if (petalsForMinigame === undefined) petalsForMinigame = 10
         self.playMinigame(petalsForMinigame).once('complete', function (petalsCollected) {
           MazeData.data[self.mazeIndex].petalsForMinigame = (petalsForMinigame - petalsCollected)
-          openEndScreen()
+          openEndScreen(MazeData.getPetals(MazeData.data[self.mazeIndex]).petals, MazeData.getPetals(MazeData.data[self.mazeIndex]).maxPetals)
         })
       })
     }

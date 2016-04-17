@@ -7,6 +7,8 @@ module.exports.getPetals = function (maze) {
       if (cell.hasPetal) results.petals++
     }
   }
+
+  return results
 }
 
 module.exports.savePetals = function (petal_cells, maze) {
