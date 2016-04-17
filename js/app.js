@@ -233,11 +233,11 @@ function App (gameContainer) {
     self.phaser.load.bitmapFont('pixel', 'font/font.png', 'font/font.fnt')
 
     var img = function (key) {
-      self.phaser.load.image(key, '/img/' + key + '.png')
+      self.phaser.load.image(key, 'img/' + key + '.png')
     }
 
     var sheet = function (key) {
-      self.phaser.load.spritesheet(key, '/img/' + key + '.png', 20, 20)
+      self.phaser.load.spritesheet(key, 'img/' + key + '.png', 20, 20)
     }
 
     self.phaser.load.spritesheet('player_idle', 'img/player/idle.png', 14, 16)
