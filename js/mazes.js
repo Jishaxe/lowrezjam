@@ -10,8 +10,8 @@ function Maze () {
   this.background = []
   this.width = null
   this.height = null
-  this.cellWidth = 10
-  this.cellHeight = 10
+  this.cellWidth = 20
+  this.cellHeight = 20
   this.columns = 12
   this.rows = 12
   this.selector = null
@@ -101,7 +101,7 @@ function Maze () {
 
     for (var x = 1; x <= this.columns; x++) {
       for (var y = 1; y <= this.rows; y++) {
-        this.cells[x + ',' + y] = new Wall(x, y)
+        this.cells[x + ',' + y] = new Floor(x, y)
       }
     }
 
@@ -193,7 +193,7 @@ function Selector (maze) {
   this.tween = {isRunning: false}
 
   this.addToPhaser = function (phaser) {
-    this.sprite = phaser.add.sprite(10, 10, 'selector')
+    this.sprite = phaser.add.sprite(20, 20, 'selector')
     this.sprite.blendMode = PIXI.blendModes.ADD
   }
 
@@ -210,10 +210,10 @@ function Selector (maze) {
       var newX
       var newY
 
-      if (keys.up.isDown) newY = this.sprite.y - 10
-      if (keys.down.isDown) newY = this.sprite.y + 10
-      if (keys.right.isDown) newX = this.sprite.x + 10
-      if (keys.left.isDown) newX = this.sprite.x - 10
+      if (keys.up.isDown) newY = this.sprite.y - 20
+      if (keys.down.isDown) newY = this.sprite.y + 20
+      if (keys.right.isDown) newX = this.sprite.x + 20
+      if (keys.left.isDown) newX = this.sprite.x - 20
 
       if (newX || newY) {
         this.tween = phaser.add.tween(this.sprite)
@@ -420,8 +420,8 @@ function Wall (x, y) {
   this.floor = null
 
   this.addToPhaser = function (phaser) {
+    this.floor = phaser.add.sprite(this.x * this.width, this.y * this.height, 'floor')
     this.sprite = phaser.add.sprite((this.x * this.width), (this.y * this.height), this.getSpriteKey())
-    this.floor = phaser.add.sprite(this.sprite.x, this.sprite.y, 'floor')
 
     if (phaser.rnd.between(0, 2) === 0) {
       this.sprite.animations.add('sparkle')

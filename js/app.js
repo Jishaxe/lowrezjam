@@ -58,6 +58,14 @@ function App (gameContainer) {
     $('#container').css('opacity', 1)
   }
 
+  this.playMazeEditor = function (rows, columns) {
+    var maze = new Maze()
+    maze.blank(rows, columns)
+    self.maze = maze
+    self.maze.enableEditor()
+    self.maze.addToPhaser(self.phaser)
+  }
+
   this.playMaze = function (json) {
     if (!json.dirty) {
       json.dirty = true
@@ -112,7 +120,8 @@ function App (gameContainer) {
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
 
-    openStartScreen()
+    // openStartScreen()
+    self.playMazeEditor(15, 15)
 
     function openStartScreen () {
       self.startScreen = new StartScreen()
