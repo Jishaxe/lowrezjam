@@ -25,22 +25,35 @@ function App (gameContainer) {
   this.minigame = null
   this.story = [
     {text: 'Hello there!',
+    emotion: 'good'},{
+    text: '             ',
     emotion: 'happy'},
-    {text: 'It\'s finally spring time and all',
-    emotion: 'good'},
-    {text: 'the cherry blossoms are in bloom, ready for the festivals!',
+    {text: 'It\'s finally spring time and all the cherry blossoms are in bloom, ready for the festivals!',
+    emotion: 'good'},{
+    text: '             ',
     emotion: 'happy'},{
-    text: 'However  ',
+    text: 'However               ',
     emotion: 'good'},
     {text: 'These pesky ghosts have been littering the prefectures with the cherry blossom petals!',
-    emotion: 'bad'},
-    {text: 'I\'m in charge of cleaning duties for the 5 prefectures',
     emotion: 'good'},{
-    text: 'Perhaps you can help me?',
+    text: '             ',
+    emotion: 'bad'},
+    {text: 'I\'m in charge of cleaning duties for the 4 prefectures',
+    emotion: 'good'},{
+    text: '             ',
     emotion: 'happy'},{
-      text: 'Lets start!',
-      emotion: 'amazing'
+    text: 'Perhaps you can help me?',
+    emotion: 'good'},{
+    text: 'Lets start!',
+    emotion: 'amazing'
     }]
+
+    this.story.push({text: '...........', emotion: 'amazing'})
+    this.story.push({text: '...........', emotion: 'amazing'})
+    this.story.push({text: '...........', emotion: 'amazing'})
+    this.story.push({text: '...........', emotion: 'amazing'})
+    this.story.push({text: '...........', emotion: 'amazing'})
+    this.story.push({text: '...........', emotion: 'amazing'})
 
   this.startScreen = null
   this.introScreen = null
@@ -120,8 +133,8 @@ function App (gameContainer) {
     // Grab the spacebar
     self.phaser.input.keyboard.addKeyCapture(Phaser.Keyboard.SPACEBAR)
 
-    // openStartScreen()
-    self.playMazeEditor(15, 15)
+    openStartScreen()
+    // self.playMazeEditor(15, 15)
 
     function openStartScreen () {
       self.startScreen = new StartScreen()

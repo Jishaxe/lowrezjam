@@ -10,12 +10,6 @@ function TalkingHana (story) {
   this.speed = 80
   this.text = null
   this.charSize = 8
-  story.push({text: '...........', emotion: 'amazing'})
-  story.push({text: '...........', emotion: 'amazing'})
-  story.push({text: '...........', emotion: 'amazing'})
-  story.push({text: '...........', emotion: 'amazing'})
-  story.push({text: '...........', emotion: 'amazing'})
-  story.push({text: '...........', emotion: 'amazing'})
   story.push({text: '...........', emotion: 'done'})
 
   this.story = story
@@ -45,7 +39,7 @@ function TalkingHana (story) {
 
     this.story.forEach(function (story, i) {
       if (x < current_x) emotion = story.emotion
-      current_x -= (story.text.replace(' ', '').length * (charSize / 2))
+      current_x -= (story.text.length * (charSize / 2))
     })
 
     return emotion
