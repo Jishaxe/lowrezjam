@@ -5,6 +5,8 @@ var inherits = require('util').inherits
 // Represents a maze
 function Maze () {
   this.cells = {}
+  this.name = null
+  this.name_sprite = null
   this.background = []
   this.width = null
   this.height = null
@@ -65,6 +67,7 @@ function Maze () {
 
   // Parse a maze.js linkset
   this.from = function (json) {
+    this.name = json.name
     this.rows = json.rows
     this.columns = json.columns
     this.cellWidth = json.cellWidth
@@ -137,6 +140,14 @@ function Maze () {
       this.selector.addToPhaser(phaser)
       phaser.camera.follow(this.selector.sprite, Phaser.Camera.FOLLOW_TOPDOWN)
     }
+
+    this.name_sprite = phaser.add.bitmapText(1, 1, 'pixel', this.name, 8)
+    this.name_sprite.fixedToCamera = true
+
+    phaser.add.tween(this.name_sprite).to({alpha: 0}, 2000, 'Linear', true).onComplete.add(function () {
+      this.name_sprite.destroy()
+      this.name_sprite = null
+    }, this)
   }
 
   this.onKey = function (phaser, keys) {
